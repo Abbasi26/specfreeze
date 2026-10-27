@@ -1,0 +1,133 @@
+version: 1
+name: portion-demo
+description: Closed questions for the offline portion demo. Edit the lists; the ask stage will not invent replacements for these.
+max_per_function: 100
+questions:
+  - id: integers_only
+    scope: module
+    category: behaviour
+    type: yes_no
+    ask: "Should `{module}` use only integers, with no floating-point arithmetic?"
+    conservative: "yes"
+    contract_note:
+      yes: "Arithmetic stays in integers. Floats are not used."
+      no: "Floating-point arithmetic is allowed."
+
+  - id: negative_raises
+    category: errors
+    type: yes_no
+    applies_to: ["split_cents"]
+    ask: "Should `{function}` raise ValueError when total is negative?"
+    conservative: "yes"
+    contract_note:
+      yes: "`split_cents` raises ValueError when total < 0."
+      no: "`split_cents` does not raise when total is negative."
+
+  - id: people_raises
+    category: errors
+    type: yes_no
+    applies_to: ["split_cents"]
+    ask: "Should `{function}` raise ValueError when people is less than 1?"
+    conservative: "yes"
+    contract_note:
+      yes: "`split_cents` raises ValueError when people < 1."
+      no: "`split_cents` accepts people < 1."
+
+  - id: remainder
+    category: behaviour
+    type: choice
+    applies_to: ["split_cents"]
+    ask: "Where should leftover cents go when total does not divide evenly?"
+    options:
+      front: "The first shares are one cent larger."
+      back: "The last shares are one cent larger."
+    conservative: "front"
+    contract_note:
+      front: "The first `total % people` shares are one cent larger."
+      back: "The last `total % people` shares are one cent larger."
+
+  - id: zero_total
+    category: edge
+    type: yes_no
+    applies_to: ["split_cents"]
+    ask: "Should `{function}` return a list of zeros when total is 0 and people is at least 1?"
+    conservative: "yes"
+    contract_note:
+      yes: "`split_cents(0, n)` returns n zeros."
+      no: "`split_cents` rejects a zero total."
+
+  - id: docstring_style
+    category: output
+    type: choice
+    applies_to: ["split_cents"]
+    ask: "What docstring should `{function}` have?"
+    options:
+      one_line: "A single summary line."
+      none: "No docstring."
+    conservative: "one_line"
+    contract_note:
+      one_line: "`split_cents` has a one-line docstring."
+      none: "`split_cents` has no docstring."
+    followups:
+      - id: docstring_mentions_errors
+        when_confidence_below: 0.6
+        category: output
+        type: yes_no
+        ask: "Should the `{function}` docstring mention the ValueError cases?"
+        conservative: "yes"
+        contract_note:
+          yes: "The `split_cents` docstring mentions ValueError."
+          no: "The `split_cents` docstring does not mention errors."
+
+  - id: empty_raises
+    category: errors
+    type: yes_no
+    applies_to: ["format_shares"]
+    ask: "Should `{function}` raise ValueError when shares is empty?"
+    conservative: "yes"
+    contract_note:
+      yes: "`format_shares` raises ValueError on an empty list."
+      no: "`format_shares` returns an empty string for an empty list."
+
+  - id: negative_share_raises
+    category: errors
+    type: yes_no
+    applies_to: ["format_shares"]
+    ask: "Should `{function}` raise ValueError when a share is negative?"
+    conservative: "yes"
+    contract_note:
+      yes: "`format_shares` raises ValueError when a share is negative."
+      no: "`format_shares` prints negative shares."
+
+  - id: separator
+    category: output
+    type: choice
+    applies_to: ["format_shares"]
+    ask: "Which separator should `{function}` place between shares?"
+    options:
+      comma_space: "A comma followed by a single space (the SEPARATOR constant)."
+      comma: "A comma with no space."
+    conservative: "comma_space"
+    contract_note:
+      comma_space: "`format_shares` joins shares with SEPARATOR, a comma followed by a space."
+      comma: "`format_shares` joins shares with a comma and no space."
+    followups:
+      - id: separator_space
+        when_answer: "comma_space"
+        category: output
+        type: yes_no
+        ask: "Is the separator exactly one comma and one space, with no trailing separator?"
+        conservative: "yes"
+        contract_note:
+          yes: "The separator is exactly a comma and one space, and there is no trailing separator."
+          no: "The separator may vary."
+
+  - id: trailing_separator
+    category: output
+    type: yes_no
+    applies_to: ["format_shares"]
+    ask: "Should `{function}` end the line with a trailing separator?"
+    conservative: "no"
+    contract_note:
+      yes: "`format_shares` ends with a trailing separator."
+      no: "`format_shares` does not add a trailing separator."

@@ -1,0 +1,417 @@
+version: 1
+name: general-python-function
+description: >
+  Closed design questions applied before code is written. Edit this file.
+  The ask stage asks at most 100 questions per run, including follow-ups.
+max_per_function: 100
+questions:
+  - id: pure
+    category: behaviour
+    type: yes_no
+    ask: "Should `{function}` be pure (no I/O and no mutation of global or caller state)?"
+    conservative: "yes"
+    contract_note:
+      yes: "`{function}` is pure: it does not perform I/O or mutate global or caller state."
+      no: "`{function}` may have effects. The follow-up decision names which effects."
+    followups:
+      - id: effect_kind
+        when_answer: "no"
+        category: behaviour
+        type: choice
+        ask: "Which effect may `{function}` have?"
+        options:
+          read_local: "Read local files only."
+          write_local: "Write local files."
+          logging: "Logging only."
+          caller_mutation: "Mutate an argument the caller passed in."
+        conservative: "logging"
+
+  - id: deterministic
+    category: behaviour
+    type: yes_no
+    ask: "Must `{function}` be deterministic for the same inputs?"
+    conservative: "yes"
+    contract_note:
+      yes: "`{function}` is deterministic."
+      no: "`{function}` may return different results for the same inputs."
+
+  - id: idempotent
+    category: behaviour
+    type: yes_no
+    ask: "Should calling `{function}` twice with the same input be safe and yield the same result?"
+    conservative: "yes"
+
+  - id: none_input
+    category: input
+    type: yes_no
+    ask: "Should `{function}` accept None as an input?"
+    conservative: "no"
+    contract_note:
+      yes: "`{function}` accepts None."
+      no: "`{function}` rejects None."
+
+  - id: empty_input
+    category: input
+    type: yes_no
+    ask: "Should `{function}` accept empty input (empty string, empty list, or zero-length bytes)?"
+    conservative: "no"
+    contract_note:
+      yes: "`{function}` accepts empty input."
+      no: "`{function}` rejects empty input."
+    followups:
+      - id: empty_kind
+        when_answer: "yes"
+        category: input
+        type: choice
+        ask: "Which empty values should `{function}` accept?"
+        options:
+          empty_string: "Empty string only."
+          empty_container: "Empty list, dict, or tuple."
+          both: "Both empty strings and empty containers."
+        conservative: "both"
+
+  - id: extra_whitespace
+    category: input
+    type: yes_no
+    ask: "Should `{function}` ignore extra internal whitespace in text inputs?"
+    conservative: "yes"
+
+  - id: strip_ends
+    category: input
+    type: yes_no
+    ask: "Should `{function}` strip leading and trailing whitespace from text inputs?"
+    conservative: "yes"
+    contract_note:
+      yes: "`{function}` strips leading and trailing whitespace."
+      no: "`{function}` preserves leading and trailing whitespace."
+
+  - id: case_sensitive
+    category: input
+    type: yes_no
+    ask: "Are text comparisons in `{function}` case-sensitive?"
+    conservative: "yes"
+    contract_note:
+      yes: "Text comparisons in `{function}` are case-sensitive."
+      no: "Text comparisons in `{function}` ignore case."
+
+  - id: unicode_form
+    category: input
+    type: choice
+    ask: "How should `{function}` treat Unicode text?"
+    options:
+      preserve: "Preserve the input code points."
+      nfkc: "Normalize to NFKC before processing."
+      ascii: "Fold to ASCII and drop characters that do not fit."
+    conservative: "preserve"
+
+  - id: control_chars
+    category: input
+    type: yes_no
+    ask: "Should `{function}` reject ASCII control characters in text inputs?"
+    conservative: "yes"
+
+  - id: type_policy
+    category: input
+    type: choice
+    ask: "How should `{function}` treat a value of the wrong type?"
+    options:
+      reject: "Raise TypeError. Do not coerce."
+      coerce: "Coerce when the conversion is obvious and lossless."
+      duck: "Accept any object that supports the operations used."
+    conservative: "reject"
+    contract_note:
+      reject: "`{function}` raises TypeError on a wrong type and does not coerce."
+      coerce: "`{function}` may coerce a wrong type when the conversion is lossless."
+      duck: "`{function}` accepts duck-typed inputs."
+
+  - id: bool_is_not_int
+    category: input
+    type: yes_no
+    ask: "Should `{function}` reject bool where an int is required (bool is a subclass of int in Python)?"
+    conservative: "yes"
+    contract_note:
+      yes: "`{function}` rejects bool where an int is required."
+      no: "`{function}` treats bool as an int."
+
+  - id: negative_numbers
+    category: edge
+    type: choice
+    ask: "What should `{function}` do with a negative number?"
+    options:
+      reject: "Raise ValueError."
+      allow: "Allow negatives and document the meaning."
+      absolute: "Use the absolute value."
+    conservative: "reject"
+    contract_note:
+      reject: "`{function}` raises ValueError on a negative number."
+      allow: "`{function}` allows negative numbers."
+      absolute: "`{function}` uses the absolute value of a negative number."
+
+  - id: zero_boundary
+    category: edge
+    type: yes_no
+    ask: "Is zero a valid input to `{function}`?"
+    conservative: "yes"
+
+  - id: overflow_policy
+    category: edge
+    type: choice
+    ask: "What should `{function}` do when a result would exceed the documented range?"
+    options:
+      raise: "Raise OverflowError or ValueError."
+      saturate: "Clamp to the documented bound."
+      ignore: "Python integers are unbounded; do not add a range check."
+    conservative: "ignore"
+
+  - id: duplicates
+    category: edge
+    type: choice
+    ask: "How should `{function}` treat duplicate items in a collection?"
+    options:
+      preserve: "Keep duplicates and their order."
+      unique: "Drop duplicates, keeping the first."
+      reject: "Raise ValueError if a duplicate appears."
+    conservative: "preserve"
+
+  - id: order_stable
+    category: edge
+    type: yes_no
+    ask: "Must `{function}` preserve the input order of collections it returns?"
+    conservative: "yes"
+    contract_note:
+      yes: "`{function}` preserves input order."
+      no: "`{function}` may reorder results."
+
+  - id: error_style
+    category: errors
+    type: choice
+    ask: "How should `{function}` report a violated precondition?"
+    options:
+      exception: "Raise an exception."
+      result: "Return a result object or a tagged tuple."
+      sentinel: "Return None or another sentinel."
+    conservative: "exception"
+    contract_note:
+      exception: "`{function}` raises on a violated precondition."
+      result: "`{function}` returns a result object instead of raising."
+      sentinel: "`{function}` returns a sentinel instead of raising."
+    followups:
+      - id: error_type
+        when_answer: "exception"
+        category: errors
+        type: choice
+        ask: "Which exception should `{function}` raise for a bad value?"
+        options:
+          value_error: "ValueError."
+          type_error: "TypeError."
+          custom: "A custom exception defined in this module."
+        conservative: "value_error"
+        contract_note:
+          value_error: "`{function}` raises ValueError for a bad value."
+          type_error: "`{function}` raises TypeError for a bad value."
+          custom: "`{function}` raises a custom exception defined in this module."
+
+  - id: error_includes_value
+    category: errors
+    type: yes_no
+    ask: "Should error messages from `{function}` include the offending value?"
+    conservative: "no"
+    contract_note:
+      yes: "Error messages from `{function}` include the offending value."
+      no: "Error messages from `{function}` do not echo the offending value."
+
+  - id: partial_failure
+    category: errors
+    type: choice
+    ask: "If `{function}` processes a collection and one item is bad, what happens?"
+    options:
+      all_or_nothing: "Raise and return nothing."
+      skip: "Skip the bad item and continue."
+      partial: "Return the successful prefix and raise."
+    conservative: "all_or_nothing"
+
+  - id: secrets_in_errors
+    category: security
+    type: yes_no
+    ask: "May `{function}` put secrets, tokens, or raw credentials into an error message or log line?"
+    conservative: "no"
+    contract_note:
+      no: "`{function}` does not put secrets into errors or logs."
+      yes: "`{function}` may include secret material in errors. This is usually wrong; the specification must say so explicitly."
+
+  - id: dynamic_exec
+    category: security
+    type: yes_no
+    ask: "May `{function}` call eval, exec, or subprocess with data derived from the input?"
+    conservative: "no"
+    contract_note:
+      no: "`{function}` does not call eval, exec, or subprocess on input data."
+      yes: "`{function}` may execute input-derived commands. The specification must name the exact mechanism."
+
+  - id: path_escape
+    category: security
+    type: yes_no
+    ask: "If `{function}` touches the filesystem, must it reject paths that escape a designated root?"
+    conservative: "yes"
+    contract_note:
+      yes: "`{function}` rejects filesystem paths that escape the designated root."
+      no: "`{function}` does not check for path escape."
+
+  - id: log_inputs
+    category: security
+    type: choice
+    ask: "May `{function}` log its inputs?"
+    options:
+      never: "Do not log inputs."
+      redacted: "Log only a redacted summary."
+      raw: "Log raw inputs."
+    conservative: "never"
+
+  - id: mutation
+    category: api
+    type: yes_no
+    ask: "May `{function}` mutate an argument the caller still holds?"
+    conservative: "no"
+    contract_note:
+      no: "`{function}` does not mutate caller-visible arguments."
+      yes: "`{function}` may mutate an argument. The specification names which one."
+
+  - id: return_new
+    category: output
+    type: yes_no
+    ask: "Should `{function}` return a new object rather than an alias of an input?"
+    conservative: "yes"
+
+  - id: none_vs_empty
+    category: output
+    type: choice
+    ask: "When `{function}` has nothing to return, what should it return?"
+    options:
+      empty: "An empty collection or empty string, not None."
+      none: "None."
+      raise: "Raise, because 'nothing' is an error here."
+    conservative: "empty"
+
+  - id: docstring
+    category: output
+    type: yes_no
+    ask: "Should `{function}` have a docstring?"
+    conservative: "yes"
+    contract_note:
+      yes: "`{function}` has a docstring."
+      no: "`{function}` has no docstring."
+
+  - id: keyword_only
+    category: api
+    type: yes_no
+    ask: "Should optional parameters of `{function}` be keyword-only?"
+    conservative: "yes"
+
+  - id: examples_normative
+    category: testing
+    type: yes_no
+    ask: "Are the examples in the specification normative (a failure to match them is a bug)?"
+    conservative: "yes"
+    contract_note:
+      yes: "Examples in the specification are normative."
+      no: "Examples in the specification are illustrative only."
+
+  - id: thread_safe
+    category: behaviour
+    type: yes_no
+    ask: "Must `{function}` be safe to call from multiple threads without the caller holding a lock?"
+    conservative: "yes"
+
+  - id: locale_independent
+    category: behaviour
+    type: yes_no
+    ask: "Must `{function}` behave the same under any process locale?"
+    conservative: "yes"
+    contract_note:
+      yes: "`{function}` does not depend on the process locale."
+      no: "`{function}` may follow the process locale."
+
+  - id: encoding
+    category: input
+    type: choice
+    ask: "Which text encoding should `{function}` use when it decodes bytes?"
+    options:
+      utf8: "UTF-8, rejecting invalid sequences."
+      utf8_replace: "UTF-8, replacing invalid sequences."
+      no_bytes: "The function does not accept bytes."
+    conservative: "no_bytes"
+
+  - id: max_input
+    category: performance
+    type: score
+    ask: "How large an input should `{function}` be prepared for?"
+    levels: ["small", "typical", "large"]
+    conservative: "typical"
+
+  - id: complexity
+    category: performance
+    type: score
+    ask: "What time-complexity budget should `{function}` aim for on its main input?"
+    levels: ["linear", "n-log-n", "quadratic-ok"]
+    conservative: "linear"
+
+  - id: validation_strictness
+    category: input
+    type: score
+    ask: "How strict should input validation in `{function}` be?"
+    levels: ["permissive", "typical", "strict"]
+    conservative: "strict"
+
+  - id: stable_signature
+    category: api
+    type: yes_no
+    ask: "Is the signature of `{function}` part of the frozen contract (no extra parameters, no renames)?"
+    conservative: "yes"
+    contract_note:
+      yes: "The signature of `{function}` is frozen."
+      no: "The signature of `{function}` may still change. Do not freeze a contract until this is yes."
+
+  - id: stdlib_only
+    scope: module
+    category: api
+    type: yes_no
+    ask: "Must `{module}` depend only on the Python standard library?"
+    conservative: "yes"
+    contract_note:
+      yes: "`{module}` imports only the standard library."
+      no: "`{module}` may import third-party packages named by the specification."
+
+  - id: network
+    scope: module
+    category: security
+    type: yes_no
+    ask: "May `{module}` open a network connection?"
+    conservative: "no"
+    contract_note:
+      no: "`{module}` does not open network connections."
+      yes: "`{module}` may open a network connection. The specification names the endpoint."
+
+  - id: filesystem_write
+    scope: module
+    category: security
+    type: yes_no
+    ask: "May `{module}` write to the filesystem?"
+    conservative: "no"
+    contract_note:
+      no: "`{module}` does not write to the filesystem."
+      yes: "`{module}` may write files. The specification names the directory."
+
+  - id: seeded_random
+    scope: module
+    category: behaviour
+    type: choice
+    ask: "If `{module}` uses randomness, how is it seeded?"
+    options:
+      none: "The module does not use randomness."
+      argument: "A seed or a random.Random instance is an explicit argument."
+      process: "The process-wide generator is acceptable."
+    conservative: "none"
+    contract_note:
+      none: "`{module}` does not use randomness."
+      argument: "Randomness in `{module}` comes from an explicit seed or random.Random."
+      process: "`{module}` may use the process-wide random generator."

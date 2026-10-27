@@ -1,0 +1,97 @@
+"""Catalog loading, caps, and follow-up triggers."""
+
+from specforge.catalog import expand_followups, instantiate, load_catalog, parse_catalog
+from specforge.errors import CatalogError
+from specforge.models import Answer, FunctionSpec
+from specforge.resources import read_text
+
+import pytest
+
+
+def test_shipped_catalogs_load():
+    general = parse_catalog(read_text("data/catalogs/general.yaml"), source="general")
+    demo = parse_catalog(read_text("data/demo/catalog.yaml"), source="demo")
+    assert general.version == 1
+    assert len(general.questions) >= 30
+    assert demo.name == "portion-demo"
+
+
+def test_instantiate_caps_at_100(tmp_path):
+    questions = "\n".join(
+        f"  - id: q{i:03d}\n    category: behaviour\n    type: yes_no\n    ask: Question {i} for {{function}}?"
+        for i in range(120)
+    )
+    path = tmp_path / "big.yaml"
+    path.write_text(
+        "version: 1\nname: big\ndescription: big\nmax_per_function: 100\nquestions:\n" + questions,
+        encoding="utf-8",
+    )
+    catalog = load_catalog(path)
+    functions = [FunctionSpec(name="alpha", signature="", purpose=""), FunctionSpec(name="beta", signature="", purpose="")]
+    asked, truncated = instantiate(catalog, functions, "mod", max_questions=100)
+    assert truncated
+    assert len(asked) == 100
+
+
+def test_followups_respect_and_trigger():
+    catalog = parse_catalog(read_text("data/demo/catalog.yaml"))
+    functions = [
+        FunctionSpec("split_cents", "def split_cents(total: int, people: int) -> list[int]:", "split"),
+        FunctionSpec("format_shares", "def format_shares(shares: list[int]) -> str:", "format"),
+    ]
+    asked, truncated = instantiate(catalog, functions, "portion", max_questions=100)
+    assert not truncated
+    by_key = {item.key: item for item in asked}
+    answers = {
+        "format_shares:separator": _answer("format_shares:separator", "comma_space", 0.9),
+        "split_cents:docstring_style": _answer("split_cents:docstring_style", "none", 0.42),
+        "split_cents:remainder": _answer("split_cents:remainder", "front", 0.91),
+    }
+    fresh = expand_followups(
+        asked,
+        answers,
+        round_no=1,
+        module="portion",
+        signatures={fn.name: fn.signature for fn in functions},
+        remaining=10,
+    )
+    keys = {item.key for item in fresh}
+    assert "format_shares:separator_space" in keys
+    assert "split_cents:docstring_mentions_errors" in keys
+    assert "split_cents:remainder" not in keys
+    assert by_key["split_cents:docstring_style"].conservative == "one_line"
+
+
+def test_bad_catalog_is_rejected():
+    with pytest.raises(CatalogError):
+        parse_catalog("version: 1\nname: x\ndescription: x\nquestions: []\n")
+
+
+def test_examples_match_the_packaged_demo():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    pairs = {
+        "examples/portion/SPEC.md": "data/demo/SPEC.md",
+        "examples/portion/catalog.yaml": "data/demo/catalog.yaml",
+        "examples/portion/tests/test_portion.py": "data/demo/test_portion.py",
+    }
+    for relative, packaged in pairs.items():
+        assert (root / relative).read_text(encoding="utf-8") == read_text(packaged)
+
+
+def _answer(key: str, value: str, confidence: float) -> Answer:
+    return Answer(
+        key=key,
+        id=key.split(":", 1)[1],
+        function=key.split(":", 1)[0],
+        category="output",
+        type="choice",
+        ask="?",
+        answer=value,
+        confidence=confidence,
+        rationale="",
+        round=0,
+        effective=value,
+        effective_source="model",
+    )
