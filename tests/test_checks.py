@@ -1,5 +1,8 @@
 """Static contract checks, blame, and conflict detection."""
 
+import sys
+from types import ModuleType
+
 import pytest
 
 from specforge.assemble import assemble, replace_part, split_group
@@ -11,6 +14,7 @@ from specforge.checks import (
     header_conflicts_in_output,
     index_tests,
     module_frames,
+    module_has_attr,
     owner_map,
     part_check,
     signature_key,
@@ -158,3 +162,32 @@ def test_header_conflict_after_module_binding_is_restored():
     assert conflicts[0].module == "json"
     assert conflicts[0].attrs == ["loads_nope"]
     assert conflicts[0].functions == ["load_config"]
+
+
+@pytest.mark.parametrize("cached", [False, True])
+@pytest.mark.parametrize("suffix", ["", ".child"])
+def test_module_has_attr_skips_nonstdlib_modules(monkeypatch, cached, suffix):
+    root = "_specforge_nonstdlib_probe"
+    assert root not in sys.stdlib_module_names
+    probes = []
+
+    def attribute_probe(name):
+        probes.append(("attribute", name))
+        raise AttributeError(name)
+
+    def import_probe(name):
+        probes.append(("import", name))
+        raise ImportError(name)
+
+    monkeypatch.delitem(sys.modules, root, raising=False)
+    if cached:
+        module = ModuleType(root)
+        module.__getattr__ = attribute_probe
+        monkeypatch.setitem(sys.modules, root, module)
+
+    monkeypatch.setattr(
+        "specforge.checks.importlib.import_module", import_probe
+    )
+
+    assert module_has_attr(root + suffix, "missing") is None
+    assert probes == []

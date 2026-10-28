@@ -289,7 +289,7 @@ def module_has_attr(module: str, attr: str) -> bool | None:
     Non-stdlib modules are not imported here: importing them could run arbitrary code.
     """
     root = module.split(".")[0]
-    if root not in sys.stdlib_module_names and root not in sys.modules:
+    if root not in sys.stdlib_module_names:
         return None
     try:
         imported = importlib.import_module(module)
