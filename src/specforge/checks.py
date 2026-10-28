@@ -121,6 +121,10 @@ def part_check(
     names = [fn.name for fn in functions]
     if name not in names:
         violations.append(f"function `{name}` is missing from the part")
+    elif names.count(name) > 1:
+        violations.append(
+            f"`{name}` is defined {names.count(name)} times; the contract requires one"
+        )
     for node in tree.body:
         if isinstance(node, (ast.Import, ast.ImportFrom)):
             continue
@@ -442,3 +446,4 @@ def _local_for(bindings: dict[str, str], module: str) -> str | None:
         if target == module or local == module or target.split(".")[0] == module.split(".")[0] and local == module.split(".")[0]:
             return local
     return None
+

@@ -191,3 +191,34 @@ def test_module_has_attr_skips_nonstdlib_modules(monkeypatch, cached, suffix):
 
     assert module_has_attr(root + suffix, "missing") is None
     assert probes == []
+
+
+@pytest.mark.parametrize(
+    ("count", "expected"),
+    [
+        (0, ["function `target` is missing from the part"]),
+        (1, []),
+        (2, ["`target` is defined 2 times; the contract requires one"]),
+        (3, ["`target` is defined 3 times; the contract requires one"]),
+    ],
+)
+def test_part_check_requires_one_top_level_target(count, expected):
+    definition = (
+        "def target(value: int) -> int:\n"
+        "    def target(value: int) -> int:\n"
+        "        return value\n"
+        "    return target(value)\n"
+    )
+    code = definition * count + (
+        "def _target_helper(value: int) -> int:\n"
+        "    return value\n"
+    )
+
+    assert part_check(
+        "target",
+        code,
+        {"target": "def target(value: int) -> int:"},
+        set(),
+        set(),
+    ) == expected
+
