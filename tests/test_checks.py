@@ -236,3 +236,13 @@ def test_module_frames_matches_complete_basename(prefix):
     assert module_frames(text, "pair.py") == [12, 8, 8]
 
 
+def test_module_frames_windows_short_tracebacks():
+    text = (
+        "C:\\tmp\\not_pair.py:99: in unrelated\n"
+        "C:\\tmp\\pair.py:12: in total\n"
+        "C:\\tmp\\pair.py.bak:77: in backup\n"
+        'File "C:\\tmp\\pair.py", line 8, in parse_item\n'
+        "C:\\tmp\\pair.py:12: in total\n"
+    )
+
+    assert module_frames(text, "pair.py") == [12, 8, 12]

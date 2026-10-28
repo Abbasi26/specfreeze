@@ -312,7 +312,7 @@ def module_frames(text: str, filename: str) -> list[int]:
     """Line numbers in ``filename`` mentioned by a traceback, in reading order."""
     base = re.escape(filename)
     hits: list[tuple[int, int]] = []
-    for match in re.finditer(rf"(?:^|[/\s\"']){base}:(\d+)", text, re.M):
+    for match in re.finditer(rf"(?:^|[/\\\s\"']){base}:(\d+)", text, re.M):
         hits.append((match.start(), int(match.group(1))))
     for match in re.finditer(rf'File "(?:[^"]*[/\\])?{base}", line (\d+)', text):
         hits.append((match.start(), int(match.group(1))))
