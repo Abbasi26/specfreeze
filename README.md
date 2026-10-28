@@ -193,7 +193,7 @@ specfreeze ist ein lokales Kommandozeilenwerkzeug für Python 3.11+. Bevor ein S
 
 ## Status
 
-Version 0.1.0, early but usable. Python package `specfreeze` (CLI `specfreeze`). MIT licensed. Every push runs the test suite in GitHub Actions (`.github/workflows/ci.yml`).
+Version 0.2.0, early but usable. Python package `specfreeze` (CLI `specfreeze`). MIT licensed. Every push runs the test suite in GitHub Actions (`.github/workflows/ci.yml`).
 
 ## Install
 
