@@ -1,16 +1,20 @@
 """Static contract checks, blame, and conflict detection."""
 
+import pytest
+
 from specforge.assemble import assemble, replace_part, split_group
 from specforge.checks import (
     blame,
     call_violations,
     detect_coupling,
+    header_bindings,
     header_conflicts_in_output,
     index_tests,
     module_frames,
     owner_map,
     part_check,
     signature_key,
+    static_header_conflicts,
 )
 
 HEADER = '"""demo: x"""\nfrom __future__ import annotations\n\nSEPARATOR = ", "\n'
@@ -116,3 +120,41 @@ def test_replace_part_keeps_the_other_function():
     )
     assert "def split_cents" in grouped["split_cents"]
     assert "def format_shares" not in grouped["split_cents"]
+
+
+@pytest.mark.parametrize(
+    ("header", "expected"),
+    [
+        ("from json import loads as json\nimport json\n", {"json": "json"}),
+        ("import json\nfrom json import loads as json\n", {}),
+        ("from json import loads as codec\nimport json as codec\n", {"codec": "json"}),
+        ("import json as codec\nfrom json import loads as codec\n", {}),
+        ("from json import loads as xml\nimport xml.etree\n", {"xml": "xml"}),
+        (
+            "from json import loads as codec\nimport xml.etree as codec\n",
+            {"codec": "xml.etree"},
+        ),
+        ("import json\nfrom math import sqrt\n", {"json": "json"}),
+        ("import json\nfrom\n", {}),
+    ],
+)
+def test_header_bindings_follow_source_order(header, expected):
+    assert header_bindings(header) == expected
+
+
+def test_header_conflict_after_module_binding_is_restored():
+    header = "from json import loads as json\nimport json\n"
+    source = (
+        header
+        + "\n# ---- load_config (specforge)\n"
+        + "def load_config(raw: str) -> dict:\n"
+        + "    return json.loads_nope(raw)\n"
+    )
+
+    conflicts = static_header_conflicts(source, header)
+
+    assert len(conflicts) == 1
+    assert conflicts[0].local == "json"
+    assert conflicts[0].module == "json"
+    assert conflicts[0].attrs == ["loads_nope"]
+    assert conflicts[0].functions == ["load_config"]

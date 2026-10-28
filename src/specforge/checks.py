@@ -75,11 +75,7 @@ def function_key(fn: ast.FunctionDef) -> str:
 
 
 def header_bindings(header: str) -> dict[str, str]:
-    """Map a local name introduced by ``import`` to the module it refers to.
-
-    ``from x import y`` removes ``y`` from that map when an earlier import had
-    bound it, because the name is no longer the module.
-    """
+    """Map local import names to modules, applying rebindings in source order."""
     try:
         tree = ast.parse(header)
     except SyntaxError:
@@ -90,8 +86,7 @@ def header_bindings(header: str) -> dict[str, str]:
             for alias in node.names:
                 local = alias.asname or alias.name.split(".")[0]
                 found[local] = alias.name if alias.asname else alias.name.split(".")[0]
-    for node in tree.body:
-        if isinstance(node, ast.ImportFrom):
+        elif isinstance(node, ast.ImportFrom):
             for alias in node.names:
                 found.pop(alias.asname or alias.name, None)
     return found
