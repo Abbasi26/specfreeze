@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- `specfreeze verify MODULE --contract RUN_DIR|contract.json`: static, offline check of any module against a frozen contract (signatures, frozen constants, calls, async drift, extra public names). `--json`; exit 0 clean, 1 drift, 2 error. Tampered contracts are refused.
+- `specfreeze catalog check FILE...` and `specfreeze catalog print`: validate catalogs and print the shipped general catalog as a starting point.
+- Example GitHub Actions contract gate in `examples/github-actions/contract-gate.yml`.
+- CI runs Python 3.11 to 3.13 and a demo plus verify smoke step.
+- ROADMAP.md, issue forms, and a pull request template.
 - Renamed the project from `specforge` to `specfreeze`: package, CLI, environment variables, files and docs. Entries below use the old name.
 
 ## 0.1.0 - 2026-10-21

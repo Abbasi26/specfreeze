@@ -1,0 +1,37 @@
+# Fail a pull request when a module drifts from its frozen specfreeze contract.
+# Copy to .github/workflows/contract-gate.yml and adjust MODULE and CONTRACT.
+# The check is static: it parses the module, never imports it, and needs no API key.
+name: contract-gate
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      MODULE: src/portion.py
+      CONTRACT: contracts/portion.contract.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install specfreeze
+        # Pin to a tag or commit SHA you have reviewed.
+        run: pip install "git+https://github.com/Abbasi26/specfreeze@main"
+      - name: Verify the module against the frozen contract
+        run: |
+          set +e
+          specfreeze verify "$MODULE" --contract "$CONTRACT" | tee verify.txt
+          code=${PIPESTATUS[0]}
+          {
+            echo "### specfreeze contract gate"
+            echo '```text'
+            cat verify.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$code"

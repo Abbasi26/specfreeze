@@ -72,6 +72,26 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--write", type=Path, help="copy the resulting module to this path")
     run.set_defaults(func=_cmd_run)
 
+    verify = sub.add_parser(
+        "verify",
+        parents=[shared],
+        help="check a Python module against a frozen contract (static, offline, never imports it)",
+    )
+    verify.add_argument("module", type=Path, help="Python file to check")
+    verify.add_argument(
+        "--contract", required=True, type=Path, help="contract.json or a run directory that contains it"
+    )
+    verify.add_argument("--json", action="store_true", help="print a JSON result")
+    verify.set_defaults(func=_cmd_verify)
+
+    catalog = sub.add_parser("catalog", parents=[shared], help="check or print question catalogs")
+    catalog_sub = catalog.add_subparsers(dest="catalog_command", required=True)
+    catalog_check = catalog_sub.add_parser("check", help="validate one or more catalog files")
+    catalog_check.add_argument("paths", nargs="+", type=Path)
+    catalog_check.set_defaults(func=_cmd_catalog_check)
+    catalog_print = catalog_sub.add_parser("print", help="print the shipped general catalog as a starting point")
+    catalog_print.set_defaults(func=_cmd_catalog_print)
+
     demo = sub.add_parser("demo", parents=[shared], help="offline end-to-end example (no API key, no network)")
     demo.add_argument("--out", type=Path, default=Path(".specfreeze/demo"), help="output directory")
     demo.set_defaults(func=_cmd_demo)
@@ -183,6 +203,31 @@ def _cmd_run(args) -> int:
         test_cmd=args.test_cmd,
         write_path=args.write,
     )
+
+
+def _cmd_verify(args) -> int:
+    from specfreeze.verify import render_json, render_text, verify_file
+
+    result = verify_file(args.module, args.contract)
+    if args.json:
+        sys.stdout.write(render_json(result))
+    else:
+        print(render_text(result, str(args.module)))
+    return 0 if result.ok else 1
+
+
+def _cmd_catalog_check(args) -> int:
+    from specfreeze.catalogcheck import check_catalogs
+
+    lines, failed = check_catalogs(args.paths)
+    for line in lines:
+        print(line)
+    return 1 if failed else 0
+
+
+def _cmd_catalog_print(args) -> int:
+    sys.stdout.write(read_text("data/catalogs/general.yaml"))
+    return 0
 
 
 def _cmd_demo(args) -> int:

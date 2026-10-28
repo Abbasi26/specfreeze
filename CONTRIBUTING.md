@@ -27,9 +27,14 @@ The test suite and `specfreeze demo` stay offline. Do not add a test that calls 
 - Live commands exit before opening a socket when the required settings are missing.
 - Writes stay inside `--out` unless the user passed `--apply` or `--write`. Both of those show a diff first.
 - A repair that changes a frozen signature, adds a public function, or reassigns a frozen constant is rejected.
+- `specfreeze verify` and `specfreeze catalog check` never import, execute, or download anything. They parse files and print a result.
 - Confidence numbers are stored as the model reported them. Do not describe them as calibrated probabilities.
 - v0.1 records a "change the header" decision and does not edit the header. Say so if you touch that path.
 
 ## Reporting vulnerabilities
 
 See [SECURITY.md](SECURITY.md). Do not open a public issue that contains a secret or a working exploit.
+
+## Where to start
+
+[ROADMAP.md](ROADMAP.md) lists good first issues. Bug reports and feature requests use the forms under `.github/ISSUE_TEMPLATE/`.
