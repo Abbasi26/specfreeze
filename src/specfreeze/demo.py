@@ -122,7 +122,7 @@ def run_demo(out: Path, *, apply: bool = True, quiet: bool = False) -> int:
             data = json.loads(marker.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
             raise PipelineError(f"{marker} is not valid JSON") from exc
-        if data.get("tool") != "specfreeze":
+        if not isinstance(data, dict) or data.get("tool") != "specfreeze":
             raise PipelineError(f"{out} is not a specfreeze run.")
     if not quiet:
         print(f"specfreeze demo writes only under {out}")

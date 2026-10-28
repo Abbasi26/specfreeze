@@ -35,7 +35,7 @@ class RunStore:
                 data = json.loads(marker.read_text(encoding="utf-8"))
             except json.JSONDecodeError as exc:
                 raise PipelineError(f"{marker} is not valid JSON") from exc
-            if data.get("tool") != "specfreeze":
+            if not isinstance(data, dict) or data.get("tool") != "specfreeze":
                 raise PipelineError(f"{root} is not a specfreeze run. Choose another --out directory.")
         root.mkdir(parents=True, exist_ok=True)
         store = cls(root)
