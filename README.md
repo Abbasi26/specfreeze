@@ -31,6 +31,29 @@ python -m specfreeze demo --out .specfreeze/demo
 
 `specfreeze demo` needs no API key and opens no network connection. It writes only under the output directory (default `.specfreeze/demo`) and refuses a non-empty directory that is not already a specfreeze run. The finished module is `.specfreeze/demo/portion.py`. A preview of the repair, including the rejected signature change, is in `generation.log`, `fix.json`, and `prompts/`.
 
+### Gate any edit on the frozen contract
+
+Once a contract is frozen, any later change to the module can be checked against it, whoever made the change: you, a teammate, Aider, Copilot, or a second specfreeze run.
+
+```bash
+specfreeze verify .specfreeze/demo/portion.py --contract .specfreeze/demo
+# .specfreeze/demo/portion.py: contract `portion` (digest 3553ade96946)
+# OK: 2 function(s) and 1 constant(s) match the frozen contract.
+```
+
+Add a `sep` parameter to `format_shares`, change `SEPARATOR`, and add a public `helper()`, and the same command exits 1:
+
+```text
+3 problem(s):
+  [signature] signature deviates from the frozen contract: expected `def format_shares(shares: list[int]) -> str:`, got `def format_shares(shares: list[int], sep: str=',') -> str:`
+  [constant] frozen constant `SEPARATOR` has a different value than the contract
+  [extra_public] public function `helper` is not in the contract; make it private (`_helper`) or add it to the spec
+```
+
+`verify` parses the file with `ast`. It never imports or runs it, needs no API key, and opens no network connection. It checks signatures, missing, changed, or reassigned frozen constants, calls that cannot match a frozen signature, async drift, and public names that are not in the contract. A contract whose digest no longer matches is refused (exit 2). `--json` prints a machine-readable result. Exit codes: 0 clean, 1 drift, 2 usage or contract error.
+
+To run it in CI, commit `contract.json` next to the module and copy [examples/github-actions/contract-gate.yml](examples/github-actions/contract-gate.yml).
+
 ## Real usage
 
 Point specfreeze at any OpenAI-compatible chat-completions endpoint. A gateway such as NVIDIA NIM is one example. There is no default URL, key, or model.
@@ -101,6 +124,16 @@ Catalogs are YAML, version 1. The shipped general catalog is `src/specfreeze/dat
 
 Question types are `yes_no`, `choice` (2 to 6 options), and `score` (2 to 5 levels). Placeholders are `{function}`, `{module}`, and `{signature}`. A follow-up fires when `when_answer` matches and, if you set both, when confidence is below `when_confidence_below`. The ask stage stops at 100 questions, including follow-ups. If any answer is uncertain, one extra round can ask the spec model for up to five new questions.
 
+Check a catalog before a paid run, or start your own from the shipped one:
+
+```bash
+specfreeze catalog print > my-catalog.yaml
+specfreeze catalog check my-catalog.yaml examples/portion/catalog.yaml
+# ok   my-catalog.yaml: general-python-function: 41 questions (choice 11, score 3, yes_no 27), 3 follow-ups, 41 with a conservative default
+```
+
+`catalog check` exits 1 if any file fails and notes questions without a `conservative` value.
+
 Confidence is whatever the model reports. It is not a calibrated probability. At or above 0.8 is high, at or above the threshold is medium, and below the threshold is low. A low-confidence answer uses the catalog's `conservative` value when one is set. The words `yes` and `no` in a catalog are answer tokens. specfreeze does not treat them as YAML booleans.
 
 ## What the repair loop will and will not change
@@ -132,7 +165,7 @@ python -m pip install -e ".[dev]"
 pytest -q
 ```
 
-The suite uses a fake provider. It does not use the network. GitHub Actions runs the same suite on Python 3.11 and 3.12.
+The suite uses a fake provider. It does not use the network. GitHub Actions runs the same suite on Python 3.11, 3.12, and 3.13, then runs the offline demo and `specfreeze verify` against its output.
 
 ## Contributing
 
@@ -140,16 +173,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). The license is MIT, copyright Wasaf Abba
 
 ## Roadmap
 
-v0.1 is one Python module per run.
-
-- Other languages.
-- Multi-file repositories and edits to code that already exists.
-- Applying a recorded "change the header" decision.
-- Coupling detection beyond a shared traceback.
-- A record/replay command for a live provider. The demo recording is in the package, not a CLI.
-- A cross-process rate limit. Calls in one process are sequential.
-- Vendor-specific streaming defaults. `SPECFREEZE_STREAM=1` is generic server-sent events.
-- Calibrated confidence. Today the number is the model's own report.
+See [ROADMAP.md](ROADMAP.md), including issues that are a good first contribution.
 
 ## How this differs from other tools
 
@@ -165,7 +189,7 @@ specfreeze is overhead for a one-line change. It earns its keep when the failure
 
 ## Kurzfassung (Deutsch)
 
-specfreeze ist ein lokales Kommandozeilenwerkzeug für Python 3.11+. Bevor ein Sprachmodell Code schreibt, beantwortet ein Entscheidungsmodell einen Katalog geschlossener Fragen (ja/nein, Auswahl, Skala) und bei Bedarf Nachfragefragen. Daraus wird eine Spezifikation mit einem eingefrorenen Vertrag: Signaturen, Typen, Fehlerverhalten und Beispiele. Ein austauschbares Code-Modell an einem OpenAI-kompatiblen Endpunkt implementiert dagegen. Ein testgetriebener Reparaturzyklus übernimmt nur Änderungen, die weniger Tests scheitern lassen und den Vertrag nicht verletzen. `specfreeze demo` läuft offline, ohne Schlüssel und ohne Netzwerk, und erzeugt ein kleines Beispielmodul. Version 0.1 bearbeitet ein einzelnes Python-Modul. Der Vertragskopf wird nicht automatisch geändert. Angegebenes Vertrauen ist eine Selbstauskunft des Modells, keine kalibrierte Wahrscheinlichkeit. Es gibt keine Telemetrie. Schreiben ausserhalb des Laufverzeichnisses braucht `--apply` oder `--write`, und davor wird ein Diff angezeigt.
+specfreeze ist ein lokales Kommandozeilenwerkzeug für Python 3.11+. Bevor ein Sprachmodell Code schreibt, beantwortet ein Entscheidungsmodell einen Katalog geschlossener Fragen (ja/nein, Auswahl, Skala) und bei Bedarf Nachfragefragen. Daraus wird eine Spezifikation mit einem eingefrorenen Vertrag: Signaturen, Typen, Fehlerverhalten und Beispiele. Ein austauschbares Code-Modell an einem OpenAI-kompatiblen Endpunkt implementiert dagegen. Ein testgetriebener Reparaturzyklus übernimmt nur Änderungen, die weniger Tests scheitern lassen und den Vertrag nicht verletzen. `specfreeze demo` läuft offline, ohne Schlüssel und ohne Netzwerk, und erzeugt ein kleines Beispielmodul. `specfreeze verify` prüft jede spätere Änderung eines Moduls statisch gegen den eingefrorenen Vertrag, auch Änderungen von Hand oder durch andere Werkzeuge, und eignet sich als CI-Gate. `specfreeze catalog check` prüft Fragenkataloge vor einem Lauf. Version 0.1 bearbeitet ein einzelnes Python-Modul. Der Vertragskopf wird nicht automatisch geändert. Angegebenes Vertrauen ist eine Selbstauskunft des Modells, keine kalibrierte Wahrscheinlichkeit. Es gibt keine Telemetrie. Schreiben ausserhalb des Laufverzeichnisses braucht `--apply` oder `--write`, und davor wird ein Diff angezeigt.
 
 ## Status
 
