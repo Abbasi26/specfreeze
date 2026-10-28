@@ -222,3 +222,17 @@ def test_part_check_requires_one_top_level_target(count, expected):
         set(),
     ) == expected
 
+
+@pytest.mark.parametrize("prefix", ["", "/tmp/", "C:\\tmp\\"])
+def test_module_frames_matches_complete_basename(prefix):
+    text = (
+        f'File "{prefix}not_pair.py", line 99, in unrelated\n'
+        '/tmp/pair.py:12: in total\n'
+        f'File "{prefix}pair.py", line 8, in parse_item\n'
+        f'File "{prefix}pair.py.bak", line 77, in backup\n'
+        f'File "{prefix}pair.py", line 8, in parse_item\n'
+    )
+
+    assert module_frames(text, "pair.py") == [12, 8, 8]
+
+

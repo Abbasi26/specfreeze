@@ -314,7 +314,7 @@ def module_frames(text: str, filename: str) -> list[int]:
     hits: list[tuple[int, int]] = []
     for match in re.finditer(rf"(?:^|[/\s\"']){base}:(\d+)", text, re.M):
         hits.append((match.start(), int(match.group(1))))
-    for match in re.finditer(rf'File "[^"]*{base}", line (\d+)', text):
+    for match in re.finditer(rf'File "(?:[^"]*[/\\])?{base}", line (\d+)', text):
         hits.append((match.start(), int(match.group(1))))
     hits.sort()
     return [line for _, line in hits]
@@ -446,4 +446,5 @@ def _local_for(bindings: dict[str, str], module: str) -> str | None:
         if target == module or local == module or target.split(".")[0] == module.split(".")[0] and local == module.split(".")[0]:
             return local
     return None
+
 
