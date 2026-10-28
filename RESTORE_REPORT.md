@@ -1,7 +1,6 @@
 # Restore report — specfreeze (project name: specfreeze)
 
 ## Mapping
-- Cursor transcript: `bc-c0364a95-81c9-5fba-84ff-f65ab9964697.jsonl`
 - GitHub empty repo target: `specfreeze`
 - Project name inside the tree: **specfreeze** (unchanged; no rename in source)
 
