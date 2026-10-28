@@ -5,9 +5,9 @@ import json
 import urllib.error
 import urllib.request
 
-from specforge.errors import ProviderError
-from specforge.provider import OpenAICompatibleProvider, parse_sse
-from specforge.textutil import redact, strip_think
+from specfreeze.errors import ProviderError
+from specfreeze.provider import OpenAICompatibleProvider, parse_sse
+from specfreeze.textutil import redact, strip_think
 
 import pytest
 
@@ -140,7 +140,7 @@ def test_parse_sse_deadline(monkeypatch):
         def __iter__(self):
             yield b'data: {"choices":[{"delta":{"content":"x"}}]}\n'
 
-    monkeypatch.setattr("specforge.provider.time.time", lambda: 10_000)
+    monkeypatch.setattr("specfreeze.provider.time.time", lambda: 10_000)
     with pytest.raises(TimeoutError):
         parse_sse(_Clock(), deadline_at=1)
 

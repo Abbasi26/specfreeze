@@ -1,6 +1,6 @@
 """Specification parsing and the frozen contract."""
 
-from specforge.contract import (
+from specfreeze.contract import (
     assert_header_safe,
     build_contract,
     dump_contract,
@@ -8,11 +8,11 @@ from specforge.contract import (
     load_contract,
     render_header,
 )
-from specforge.decision import build_answer
-from specforge.errors import ContractError, SpecError
-from specforge.models import Asked
-from specforge.resources import read_text
-from specforge.specdoc import parse_spec
+from specfreeze.decision import build_answer
+from specfreeze.errors import ContractError, SpecError
+from specfreeze.models import Asked
+from specfreeze.resources import read_text
+from specfreeze.specdoc import parse_spec
 
 import pytest
 

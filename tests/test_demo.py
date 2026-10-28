@@ -4,9 +4,9 @@ import json
 import socket
 import urllib.request
 
-from specforge.cli import main
-from specforge.demo import run_demo
-from specforge.provider import OpenAICompatibleProvider
+from specfreeze.cli import main
+from specfreeze.demo import run_demo
+from specfreeze.provider import OpenAICompatibleProvider
 
 import pytest
 
@@ -17,10 +17,10 @@ def test_demo_end_to_end(tmp_path, monkeypatch):
 
     monkeypatch.setattr(urllib.request, "urlopen", explode)
     monkeypatch.setattr(socket, "create_connection", explode)
-    monkeypatch.setenv("SPECFORGE_BASE_URL", "https://example.invalid/v1")
-    monkeypatch.setenv("SPECFORGE_API_KEY", "sk-demo-should-not-leak")
-    monkeypatch.setenv("SPECFORGE_DECISION_MODEL", "should-not-be-called")
-    monkeypatch.setenv("SPECFORGE_CODE_MODEL", "should-not-be-called")
+    monkeypatch.setenv("SPECFREEZE_BASE_URL", "https://example.invalid/v1")
+    monkeypatch.setenv("SPECFREEZE_API_KEY", "sk-demo-should-not-leak")
+    monkeypatch.setenv("SPECFREEZE_DECISION_MODEL", "should-not-be-called")
+    monkeypatch.setenv("SPECFREEZE_CODE_MODEL", "should-not-be-called")
 
     out = tmp_path / "demo"
     assert run_demo(out, apply=True, quiet=True) == 0
@@ -76,10 +76,10 @@ def test_cli_demo_and_help(tmp_path, capsys, monkeypatch):
 
 
 def test_live_ask_without_a_key_does_not_touch_the_network(tmp_path, monkeypatch):
-    monkeypatch.delenv("SPECFORGE_API_KEY", raising=False)
-    monkeypatch.delenv("SPECFORGE_BASE_URL", raising=False)
-    monkeypatch.delenv("SPECFORGE_DECISION_MODEL", raising=False)
-    monkeypatch.delenv("SPECFORGE_CODE_MODEL", raising=False)
+    monkeypatch.delenv("SPECFREEZE_API_KEY", raising=False)
+    monkeypatch.delenv("SPECFREEZE_BASE_URL", raising=False)
+    monkeypatch.delenv("SPECFREEZE_DECISION_MODEL", raising=False)
+    monkeypatch.delenv("SPECFREEZE_CODE_MODEL", raising=False)
     monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: (_ for _ in ()).throw(AssertionError("network")))
     code = main(["ask", "--spec", "missing.md", "--out", str(tmp_path / "run")])
     assert code == 2
@@ -98,6 +98,6 @@ def test_refuses_a_non_empty_foreign_directory(tmp_path):
     foreign = tmp_path / "notes"
     foreign.mkdir()
     (foreign / "notes.txt").write_text("keep me", encoding="utf-8")
-    with pytest.raises(Exception, match="not a specforge run"):
+    with pytest.raises(Exception, match="not a specfreeze run"):
         run_demo(foreign, quiet=True)
     assert (foreign / "notes.txt").read_text(encoding="utf-8") == "keep me"

@@ -1,9 +1,9 @@
-# Restore report — specfreeze (project name: specforge)
+# Restore report — specfreeze (project name: specfreeze)
 
 ## Mapping
 - Cursor transcript: `bc-c0364a95-81c9-5fba-84ff-f65ab9964697.jsonl`
 - GitHub empty repo target: `specfreeze`
-- Project name inside the tree: **specforge** (unchanged; no rename in source)
+- Project name inside the tree: **specfreeze** (unchanged; no rename in source)
 
 ## Method
 1. Replayed all `search_replace` edit diffs from the transcript in order (68 edits, 0 parse failures).
@@ -14,14 +14,14 @@
 ## Transcript vs generated
 | Area | Source |
 |------|--------|
-| `src/specforge/**`, `tests/**`, packaging, docs, CI | Restored from transcript diffs |
-| `examples/portion/**` | Recreated from `src/specforge/data/demo/**` (transcript shell copy) |
+| `src/specfreeze/**`, `tests/**`, packaging, docs, CI | Restored from transcript diffs |
+| `examples/portion/**` | Recreated from `src/specfreeze/data/demo/**` (transcript shell copy) |
 | `SPEC.md` | Written at restore time from the task prompt (sanitized) |
 | Code written by dual-provider pipeline this run | **None** (not needed) |
 
 ## Tests
 - `pytest`: **41 passed**
-- Offline `specforge demo`: repair loop rejected one contract-breaking candidate, then **10/10** demo tests passed
+- Offline `specfreeze demo`: repair loop rejected one contract-breaking candidate, then **10/10** demo tests passed
 - Hygiene: green after sanitize of restore-time `SPEC.md`
 
 ## Ready to push

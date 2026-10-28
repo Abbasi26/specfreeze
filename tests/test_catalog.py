@@ -1,9 +1,9 @@
 """Catalog loading, caps, and follow-up triggers."""
 
-from specforge.catalog import expand_followups, instantiate, load_catalog, parse_catalog
-from specforge.errors import CatalogError
-from specforge.models import Answer, FunctionSpec
-from specforge.resources import read_text
+from specfreeze.catalog import expand_followups, instantiate, load_catalog, parse_catalog
+from specfreeze.errors import CatalogError
+from specfreeze.models import Answer, FunctionSpec
+from specfreeze.resources import read_text
 
 import pytest
 

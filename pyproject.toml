@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "specforge"
+name = "specfreeze"
 version = "0.1.0"
 description = "Decision-driven LLM code generation: settle closed questions, freeze a contract, then implement."
 readme = "README.md"
@@ -16,14 +16,14 @@ dependencies = ["PyYAML>=6.0.1"]
 dev = ["pytest>=7.4"]
 
 [project.scripts]
-specforge = "specforge.cli:main"
+specfreeze = "specfreeze.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-specforge = ["data/catalogs/*.yaml", "data/demo/*"]
+specfreeze = ["data/catalogs/*.yaml", "data/demo/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-norecursedirs = [".specforge", "examples", "uploads", "agent-tools", ".git"]
+norecursedirs = [".specfreeze", "examples", "uploads", "agent-tools", ".git"]

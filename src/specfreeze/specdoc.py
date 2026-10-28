@@ -9,8 +9,8 @@ from __future__ import annotations
 import ast
 import re
 
-from specforge.errors import SpecError
-from specforge.models import FunctionSpec, SpecDocument
+from specfreeze.errors import SpecError
+from specfreeze.models import FunctionSpec, SpecDocument
 
 _HEADING_FN = re.compile(r"^#{2,4}\s+`([^`]+)`\s*$")
 _CONST = re.compile(r"^-\s+`([A-Z][A-Z0-9_]*)\s*=\s*(.+?)`\s*(?:[—–-]\s*(.*))?$")

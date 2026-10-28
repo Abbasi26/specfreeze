@@ -15,10 +15,10 @@ import sys
 import tempfile
 from pathlib import Path
 
-from specforge.distill import binding_lines
-from specforge.errors import ContractError
-from specforge.models import Answer, SpecDocument
-from specforge.specdoc import normalize_signature
+from specfreeze.distill import binding_lines
+from specfreeze.errors import ContractError
+from specfreeze.models import Answer, SpecDocument
+from specfreeze.specdoc import normalize_signature
 
 _FROZEN_NOTE = (
     "The signatures, constants, error behaviour, examples, and calls in this contract are frozen. "
@@ -228,15 +228,15 @@ def assert_header_safe(header: str) -> None:
 def assert_header_importable(header: str) -> None:
     """Import the header in a scratch file so a bad import fails before freeze."""
     assert_header_safe(header)
-    with tempfile.TemporaryDirectory(prefix="specforge-header-") as tmp:
-        path = Path(tmp) / "_specforge_header.py"
+    with tempfile.TemporaryDirectory(prefix="specfreeze-header-") as tmp:
+        path = Path(tmp) / "_specfreeze_header.py"
         path.write_text(header, encoding="utf-8")
         proc = subprocess.run(
             [
                 sys.executable,
                 "-c",
                 "import importlib.util, sys; "
-                "spec = importlib.util.spec_from_file_location('specforge_header', sys.argv[1]); "
+                "spec = importlib.util.spec_from_file_location('specfreeze_header', sys.argv[1]); "
                 "module = importlib.util.module_from_spec(spec); "
                 "spec.loader.exec_module(module)",
                 str(path),
@@ -290,6 +290,6 @@ def load_contract(text: str) -> dict:
     if data.get("frozen") and data.get("digest") and data["digest"] != digest:
         raise ContractError(
             "frozen contract digest does not match its signatures. "
-            "The file was edited after freeze; specforge will not build against it."
+            "The file was edited after freeze; specfreeze will not build against it."
         )
     return data

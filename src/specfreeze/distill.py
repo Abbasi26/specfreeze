@@ -6,8 +6,8 @@ markdown, which is what a later code model (and a reviewer) can diff.
 
 from __future__ import annotations
 
-from specforge.decision import _band
-from specforge.models import Answer, SpecDocument
+from specfreeze.decision import _band
+from specfreeze.models import Answer, SpecDocument
 
 _ORDER = ["behaviour", "api", "input", "edge", "errors", "output", "security", "performance", "testing"]
 

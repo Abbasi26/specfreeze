@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import ast
 
-from specforge.errors import PipelineError
+from specfreeze.errors import PipelineError
 
-_MARKER = "# ---- {name} (specforge)"
+_MARKER = "# ---- {name} (specfreeze)"
 
 
 def split_imports(code: str) -> tuple[list[str], str]:
@@ -37,7 +37,7 @@ def assemble(header: str, parts: list[tuple[str, str]]) -> str:
             if statement not in seen:
                 seen.add(statement)
                 lifted.append(statement)
-        bodies.append(f"# ---- {name} (specforge)\n{body.strip()}\n")
+        bodies.append(f"# ---- {name} (specfreeze)\n{body.strip()}\n")
     middle = ""
     if lifted:
         middle = "\n# imports lifted from function parts\n" + "\n".join(lifted) + "\n"
@@ -47,14 +47,14 @@ def assemble(header: str, parts: list[tuple[str, str]]) -> str:
 def replace_part(source: str, name: str, code: str) -> str:
     """Replace the marked part ``name`` and lift any new imports. The header stays put."""
     lines = source.splitlines()
-    marker = f"# ---- {name} (specforge)"
+    marker = f"# ---- {name} (specfreeze)"
     start = None
     end = len(lines)
     for index, line in enumerate(lines):
         if line.strip() == marker and start is None:
             start = index
             continue
-        if start is not None and line.startswith("# ---- ") and line.rstrip().endswith("(specforge)"):
+        if start is not None and line.startswith("# ---- ") and line.rstrip().endswith("(specfreeze)"):
             end = index
             break
     if start is None:

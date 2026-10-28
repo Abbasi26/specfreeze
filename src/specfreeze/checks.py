@@ -14,10 +14,10 @@ import re
 import sys
 from dataclasses import dataclass
 
-from specforge.errors import ContractError
+from specfreeze.errors import ContractError
 
 _ATTR = re.compile(r"module '([\w.]+)' has no attribute '(\w+)'")
-_MARKER = re.compile(r"^# ---- (\S+) \(specforge\)\s*$")
+_MARKER = re.compile(r"^# ---- (\S+) \(specfreeze\)\s*$")
 _BUILTIN = set(dir(builtins))
 
 

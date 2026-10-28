@@ -13,8 +13,8 @@ from pathlib import Path
 
 import yaml
 
-from specforge.errors import CatalogError
-from specforge.models import Asked, Catalog, Followup, FunctionSpec, QuestionTemplate
+from specfreeze.errors import CatalogError
+from specfreeze.models import Asked, Catalog, Followup, FunctionSpec, QuestionTemplate
 
 _SLUG = re.compile(r"^[a-z][a-z0-9_-]{0,40}$")
 _TYPES = {"yes_no": "yes_no", "noul": "yes_no", "bool": "yes_no", "yesno": "yes_no",

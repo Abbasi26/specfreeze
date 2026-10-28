@@ -1,9 +1,9 @@
-# SPEC — specforge 0.1
+# SPEC — specfreeze 0.1
 
 Decision-driven LLM code generation framework.
 
 ## Goal
-LLM code is unreliable when requirements are vague. Specforge forces decisions before coding:
+LLM code is unreliable when requirements are vague. Specfreeze forces decisions before coding:
 
 1. For each function or module, a decision model answers a catalog of up to ~100 closed design questions, then refined follow-ups.
 2. Answers are distilled into a specification with a frozen interface contract (signatures, types, error behaviour, examples).
@@ -17,14 +17,14 @@ LLM code is unreliable when requirements are vague. Specforge forces decisions b
 - Before commit: no API keys, tokens, hostnames or personal paths.
 
 ## Scope v0.1
-- CLI `specforge` with subcommands including ask / contract / implement / repair / demo (as delivered).
+- CLI `specfreeze` with subcommands including ask / contract / implement / repair / demo (as delivered).
 - Offline demo that needs no network and no API key.
 - Pytest suite; package data for catalogs and demo fixtures.
 - Neutral public names (no leftover internal tool codenames).
 
 ## Positioning
-Related tools: Aider, GPT-Engineer, Spec Kit, MetaGPT, Kiro specs. Specforge's differentiator is the closed-question catalog plus a frozen contract that the repair loop must not break.
+Related tools: Aider, GPT-Engineer, Spec Kit, MetaGPT, Kiro specs. Specfreeze's differentiator is the closed-question catalog plus a frozen contract that the repair loop must not break.
 
 ## Acceptance
 - `pytest` green.
-- `specforge demo` runs offline and ends with all demo tests passing after repair.
+- `specfreeze demo` runs offline and ends with all demo tests passing after repair.

@@ -2,12 +2,12 @@
 
 import json
 
-from specforge.config import Settings
-from specforge.pipeline import _fill_signatures, _load_or_decompose
-from specforge.provider import FakeProvider
-from specforge.session import Session
-from specforge.store import RunStore
-from specforge.textutil import stage_tag
+from specfreeze.config import Settings
+from specfreeze.pipeline import _fill_signatures, _load_or_decompose
+from specfreeze.provider import FakeProvider
+from specfreeze.session import Session
+from specfreeze.store import RunStore
+from specfreeze.textutil import stage_tag
 
 
 SPEC = "# adder\n\nModule: `adder`\n\nAdd two integers and reject bool.\n"

@@ -6,14 +6,14 @@ import json
 import tempfile
 from pathlib import Path
 
-from specforge.config import Settings
-from specforge.errors import PipelineError, ProviderError
-from specforge.pipeline import run_all
-from specforge.provider import FakeProvider
-from specforge.resources import read_text
-from specforge.session import Session
-from specforge.store import RunStore
-from specforge.textutil import parse_json_payload, stage_tag
+from specfreeze.config import Settings
+from specfreeze.errors import PipelineError, ProviderError
+from specfreeze.pipeline import run_all
+from specfreeze.provider import FakeProvider
+from specfreeze.resources import read_text
+from specfreeze.session import Session
+from specfreeze.store import RunStore
+from specfreeze.textutil import parse_json_payload, stage_tag
 
 _ANSWERS = {
     "module:integers_only": {"answer": "yes", "confidence": 0.96, "rationale": "The specification forbids floats."},
@@ -108,24 +108,24 @@ def run_demo(out: Path, *, apply: bool = True, quiet: bool = False) -> int:
     """Run every stage offline into ``out``.
 
     The directory is created if needed. A non-empty directory that is not a
-    previous specforge run is refused, so a demo cannot clobber unrelated files.
+    previous specfreeze run is refused, so a demo cannot clobber unrelated files.
     """
     out = Path(out)
     if out.exists() and any(out.iterdir()):
         marker = out / "run.json"
         if not marker.exists():
             raise PipelineError(
-                f"{out} is not empty and is not a specforge run. "
+                f"{out} is not empty and is not a specfreeze run. "
                 "Choose another --out directory."
             )
         try:
             data = json.loads(marker.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
             raise PipelineError(f"{marker} is not valid JSON") from exc
-        if data.get("tool") != "specforge":
-            raise PipelineError(f"{out} is not a specforge run.")
+        if data.get("tool") != "specfreeze":
+            raise PipelineError(f"{out} is not a specfreeze run.")
     if not quiet:
-        print(f"specforge demo writes only under {out}")
+        print(f"specfreeze demo writes only under {out}")
         print("Offline recorded provider. No network, no API key.")
     run = RunStore.open(out, force=True)
     settings = Settings(
@@ -138,7 +138,7 @@ def run_demo(out: Path, *, apply: bool = True, quiet: bool = False) -> int:
     )
     provider = FakeProvider(recorded_reply, model="recorded")
     session = Session(settings, run, {role: provider for role in ("decision", "spec", "code")}, quiet=quiet)
-    with tempfile.TemporaryDirectory(prefix="specforge-demo-src-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="specfreeze-demo-src-") as tmp:
         root = Path(tmp)
         (root / "SPEC.md").write_text(read_text("data/demo/SPEC.md"), encoding="utf-8")
         (root / "catalog.yaml").write_text(read_text("data/demo/catalog.yaml"), encoding="utf-8")

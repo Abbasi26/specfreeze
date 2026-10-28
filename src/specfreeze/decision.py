@@ -10,10 +10,10 @@ from __future__ import annotations
 
 import json
 
-from specforge.errors import ProviderError
-from specforge.models import Answer, Asked
-from specforge.provider import loads_json_reply
-from specforge.textutil import chunks
+from specfreeze.errors import ProviderError
+from specfreeze.models import Answer, Asked
+from specfreeze.provider import loads_json_reply
+from specfreeze.textutil import chunks
 
 _SYSTEM = (
     "You answer closed design questions before any code is written. "
@@ -25,7 +25,7 @@ _YES = {"yes": "yes", "true": "yes", "y": "yes", "no": "no", "false": "no", "n":
 
 
 def answer_questions(session, questions: list[Asked], spec_text: str, *, threshold: float, batch_size: int = 8) -> list[Answer]:
-    """Answer ``questions`` in batches. ``session`` is a :class:`specforge.session.Session`."""
+    """Answer ``questions`` in batches. ``session`` is a :class:`specfreeze.session.Session`."""
     answers: list[Answer] = []
     context = spec_text.strip()[:12000]
     for batch in chunks(questions, batch_size):

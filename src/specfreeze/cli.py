@@ -1,4 +1,4 @@
-"""Command-line interface for specforge."""
+"""Command-line interface for specfreeze."""
 
 from __future__ import annotations
 
@@ -6,10 +6,10 @@ import argparse
 import sys
 from pathlib import Path
 
-from specforge import __version__
-from specforge.demo import run_demo
-from specforge.errors import SpecforgeError
-from specforge.pipeline import (
+from specfreeze import __version__
+from specfreeze.demo import run_demo
+from specfreeze.errors import SpecfreezeError
+from specfreeze.pipeline import (
     ask_stage,
     build_stage,
     fix_stage,
@@ -17,18 +17,18 @@ from specforge.pipeline import (
     run_all,
     spec_stage,
 )
-from specforge.resources import read_text
+from specfreeze.resources import read_text
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="specforge",
+        prog="specfreeze",
         description=(
             "Decision-driven code generation. Closed questions are answered and "
             "frozen into a contract before a code model writes anything."
         ),
     )
-    parser.add_argument("--version", action="version", version=f"specforge {__version__}")
+    parser.add_argument("--version", action="version", version=f"specfreeze {__version__}")
     parser.add_argument("--quiet", action="store_true", help="suppress progress lines")
     shared = argparse.ArgumentParser(add_help=False)
     shared.add_argument("--quiet", action="store_true", help="suppress progress lines")
@@ -73,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
     run.set_defaults(func=_cmd_run)
 
     demo = sub.add_parser("demo", parents=[shared], help="offline end-to-end example (no API key, no network)")
-    demo.add_argument("--out", type=Path, default=Path(".specforge/demo"), help="output directory")
+    demo.add_argument("--out", type=Path, default=Path(".specfreeze/demo"), help="output directory")
     demo.set_defaults(func=_cmd_demo)
 
     try:
@@ -85,11 +85,11 @@ def main(argv: list[str] | None = None) -> int:
         return code if isinstance(code, int) else 2
     try:
         return args.func(args)
-    except SpecforgeError as exc:
-        print(f"specforge: {exc}", file=sys.stderr)
+    except SpecfreezeError as exc:
+        print(f"specfreeze: {exc}", file=sys.stderr)
         return 2
     except ValueError as exc:
-        print(f"specforge: {exc}", file=sys.stderr)
+        print(f"specfreeze: {exc}", file=sys.stderr)
         return 2
 
 

@@ -5,10 +5,10 @@ from __future__ import annotations
 import hashlib
 import time
 
-from specforge.config import Settings
-from specforge.provider import Provider
-from specforge.store import RunStore
-from specforge.textutil import redact, stage_tag
+from specfreeze.config import Settings
+from specfreeze.provider import Provider
+from specfreeze.store import RunStore
+from specfreeze.textutil import redact, stage_tag
 
 
 class Session:

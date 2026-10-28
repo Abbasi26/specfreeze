@@ -2,18 +2,18 @@
 
 import json
 
-from specforge.assemble import assemble
-from specforge.checks import part_check
-from specforge.config import Settings
-from specforge.contract import build_contract, fingerprint
-from specforge.errors import ProviderError
-from specforge.models import Answer
-from specforge.provider import FakeProvider
-from specforge.repair import is_improvement, parse_pytest, repair
-from specforge.session import Session
-from specforge.specdoc import parse_spec
-from specforge.store import RunStore
-from specforge.textutil import stage_tag
+from specfreeze.assemble import assemble
+from specfreeze.checks import part_check
+from specfreeze.config import Settings
+from specfreeze.contract import build_contract, fingerprint
+from specfreeze.errors import ProviderError
+from specfreeze.models import Answer
+from specfreeze.provider import FakeProvider
+from specfreeze.repair import is_improvement, parse_pytest, repair
+from specfreeze.session import Session
+from specfreeze.specdoc import parse_spec
+from specfreeze.store import RunStore
+from specfreeze.textutil import stage_tag
 
 PAIR = """
 # pair

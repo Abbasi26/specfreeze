@@ -2,7 +2,7 @@
 
 The live provider speaks the OpenAI chat-completions protocol, which is what
 hosted endpoints such as NVIDIA NIM expose. The fake provider never opens a
-socket; tests and ``specforge demo`` use it.
+socket; tests and ``specfreeze demo`` use it.
 """
 
 from __future__ import annotations
@@ -15,8 +15,8 @@ import urllib.request
 from collections.abc import Callable
 from typing import Protocol
 
-from specforge.errors import ProviderError
-from specforge.textutil import message_text, parse_json_payload, redact, strip_think
+from specfreeze.errors import ProviderError
+from specfreeze.textutil import message_text, parse_json_payload, redact, strip_think
 
 # Codes worth another try on the same model. Auth failures are not in this set.
 _RETRYABLE = {408, 409, 429, 500, 502, 503, 504}
@@ -87,9 +87,9 @@ class OpenAICompatibleProvider:
         urlopen=urllib.request.urlopen,
     ):
         if not base_url:
-            raise ProviderError("SPECFORGE_BASE_URL is not set")
+            raise ProviderError("SPECFREEZE_BASE_URL is not set")
         if not api_key:
-            raise ProviderError("SPECFORGE_API_KEY is not set")
+            raise ProviderError("SPECFREEZE_API_KEY is not set")
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.fallbacks = list(fallbacks or [])
@@ -113,7 +113,7 @@ class OpenAICompatibleProvider:
         max_tokens: int = 4096,
     ) -> str:
         if not model:
-            raise ProviderError("no model name for this role (set SPECFORGE_DECISION_MODEL / SPECFORGE_CODE_MODEL)")
+            raise ProviderError("no model name for this role (set SPECFREEZE_DECISION_MODEL / SPECFREEZE_CODE_MODEL)")
         chain = [model] + [item for item in self.fallbacks if item != model]
         last_error = "no model was called"
         for current in chain:
@@ -162,7 +162,7 @@ class OpenAICompatibleProvider:
             if reasoning:
                 raise _fatal(
                     f"{model} returned reasoning and no content. "
-                    "Disable thinking on the endpoint or set SPECFORGE_EXTRA_BODY."
+                    "Disable thinking on the endpoint or set SPECFREEZE_EXTRA_BODY."
                 )
             raise ProviderError(f"{model} returned an empty reply (finish={finish})")
 

@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SKIP = {".git", ".venv", ".specforge", "__pycache__", "uploads", "agent-tools", ".pytest_cache"}
+SKIP = {".git", ".venv", ".specfreeze", "__pycache__", "uploads", "agent-tools", ".pytest_cache"}
 def _pattern(*parts: str, flags: int = 0) -> re.Pattern[str]:
     return re.compile("".join(parts), flags)
 

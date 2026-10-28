@@ -1,7 +1,7 @@
 """Environment configuration.
 
 Nothing in here has a default endpoint or a default key. A real run must set
-SPECFORGE_BASE_URL, SPECFORGE_API_KEY, and a model name for each role it uses.
+SPECFREEZE_BASE_URL, SPECFREEZE_API_KEY, and a model name for each role it uses.
 """
 
 from __future__ import annotations
@@ -96,36 +96,36 @@ class Settings:
 
 
 def load_settings() -> Settings:
-    """Read SPECFORGE_* variables. Missing values stay empty; callers decide."""
-    extra_raw = _env("SPECFORGE_EXTRA_BODY")
+    """Read SPECFREEZE_* variables. Missing values stay empty; callers decide."""
+    extra_raw = _env("SPECFREEZE_EXTRA_BODY")
     extra: dict = {}
     if extra_raw:
         try:
             parsed = json.loads(extra_raw)
         except json.JSONDecodeError as exc:
-            raise ValueError("SPECFORGE_EXTRA_BODY must be a JSON object") from exc
+            raise ValueError("SPECFREEZE_EXTRA_BODY must be a JSON object") from exc
         if not isinstance(parsed, dict):
-            raise ValueError("SPECFORGE_EXTRA_BODY must be a JSON object")
+            raise ValueError("SPECFREEZE_EXTRA_BODY must be a JSON object")
         extra = parsed
-    fallbacks = [item.strip() for item in _env("SPECFORGE_FALLBACK_MODELS").split(",") if item.strip()]
-    provider = _env("SPECFORGE_PROVIDER") or "openai"
+    fallbacks = [item.strip() for item in _env("SPECFREEZE_FALLBACK_MODELS").split(",") if item.strip()]
+    provider = _env("SPECFREEZE_PROVIDER") or "openai"
     return Settings(
-        base_url=_env("SPECFORGE_BASE_URL"),
-        api_key=_env("SPECFORGE_API_KEY"),
-        decision_model=_env("SPECFORGE_DECISION_MODEL"),
-        spec_model=_env("SPECFORGE_SPEC_MODEL"),
-        code_model=_env("SPECFORGE_CODE_MODEL"),
-        decision_base_url=_env("SPECFORGE_DECISION_BASE_URL"),
-        spec_base_url=_env("SPECFORGE_SPEC_BASE_URL"),
-        code_base_url=_env("SPECFORGE_CODE_BASE_URL"),
-        decision_api_key=_env("SPECFORGE_DECISION_API_KEY"),
-        spec_api_key=_env("SPECFORGE_SPEC_API_KEY"),
-        code_api_key=_env("SPECFORGE_CODE_API_KEY"),
+        base_url=_env("SPECFREEZE_BASE_URL"),
+        api_key=_env("SPECFREEZE_API_KEY"),
+        decision_model=_env("SPECFREEZE_DECISION_MODEL"),
+        spec_model=_env("SPECFREEZE_SPEC_MODEL"),
+        code_model=_env("SPECFREEZE_CODE_MODEL"),
+        decision_base_url=_env("SPECFREEZE_DECISION_BASE_URL"),
+        spec_base_url=_env("SPECFREEZE_SPEC_BASE_URL"),
+        code_base_url=_env("SPECFREEZE_CODE_BASE_URL"),
+        decision_api_key=_env("SPECFREEZE_DECISION_API_KEY"),
+        spec_api_key=_env("SPECFREEZE_SPEC_API_KEY"),
+        code_api_key=_env("SPECFREEZE_CODE_API_KEY"),
         fallbacks=fallbacks,
-        timeout=_env_float("SPECFORGE_TIMEOUT", 120.0),
-        deadline=_env_float("SPECFORGE_DEADLINE", 300.0),
-        stream=_env("SPECFORGE_STREAM") == "1",
-        test_timeout=_env_int("SPECFORGE_TEST_TIMEOUT", 60),
+        timeout=_env_float("SPECFREEZE_TIMEOUT", 120.0),
+        deadline=_env_float("SPECFREEZE_DEADLINE", 300.0),
+        stream=_env("SPECFREEZE_STREAM") == "1",
+        test_timeout=_env_int("SPECFREEZE_TEST_TIMEOUT", 60),
         extra_body=extra,
         provider=provider,
     )

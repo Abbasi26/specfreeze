@@ -16,8 +16,8 @@ import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from specforge.assemble import replace_part, split_group
-from specforge.checks import (
+from specfreeze.assemble import replace_part, split_group
+from specfreeze.checks import (
     blame,
     call_violations,
     detect_coupling,
@@ -30,11 +30,11 @@ from specforge.checks import (
     owner_map,
     part_check,
 )
-from specforge.contract import constant_names, fingerprint, signatures_of
-from specforge.decision import answer_questions
-from specforge.errors import PipelineError
-from specforge.models import Asked
-from specforge.textutil import extract_code
+from specfreeze.contract import constant_names, fingerprint, signatures_of
+from specfreeze.decision import answer_questions
+from specfreeze.errors import PipelineError
+from specfreeze.models import Asked
+from specfreeze.textutil import extract_code
 
 _SYSTEM = (
     "You repair one Python function so its tests pass. "
@@ -140,7 +140,7 @@ def run_tests(
     """Execute ``command`` in a scratch directory that contains the candidate module and the tests."""
     if not tests:
         raise PipelineError("fix needs tests inside the run directory (pass --tests)")
-    with tempfile.TemporaryDirectory(prefix="specforge-tests-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="specfreeze-tests-") as tmp:
         root = Path(tmp)
         (root / "pytest.ini").write_text("[pytest]\naddopts =\n", encoding="utf-8")
         (root / f"{module_name}.py").write_text(source, encoding="utf-8")
@@ -573,14 +573,14 @@ def _repair_prompt(name, signature, part, contract, failures, tests_index, spec_
 
 def _part_source(source: str, name: str) -> str:
     lines = source.splitlines()
-    marker = f"# ---- {name} (specforge)"
+    marker = f"# ---- {name} (specfreeze)"
     start = None
     end = len(lines)
     for index, line in enumerate(lines):
         if line.strip() == marker and start is None:
             start = index + 1
             continue
-        if start is not None and line.startswith("# ---- ") and "(specforge)" in line:
+        if start is not None and line.startswith("# ---- ") and "(specfreeze)" in line:
             end = index
             break
     if start is None:

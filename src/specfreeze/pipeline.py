@@ -13,18 +13,18 @@ import json
 import shutil
 from pathlib import Path
 
-from specforge import __version__
-from specforge.assemble import assemble
-from specforge.catalog import expand_followups, instantiate, load_catalog, questions_from_model
-from specforge.checks import (
+from specfreeze import __version__
+from specfreeze.assemble import assemble
+from specfreeze.catalog import expand_followups, instantiate, load_catalog, questions_from_model
+from specfreeze.checks import (
     call_violations,
     header_bindings,
     missing_constants,
     module_signature_violations,
     part_check,
 )
-from specforge.config import Settings, load_settings
-from specforge.contract import (
+from specfreeze.config import Settings, load_settings
+from specfreeze.contract import (
     assert_header_importable,
     build_contract,
     dump_contract,
@@ -34,22 +34,22 @@ from specforge.contract import (
     signatures_of,
     constant_names,
 )
-from specforge.decision import answer_questions, render_answers, uncertain
-from specforge.distill import distill
-from specforge.errors import PipelineError, ProviderError, SpecforgeError
-from specforge.models import Asked, Answer, FunctionSpec, SpecDocument
-from specforge.provider import OpenAICompatibleProvider, loads_json_reply
-from specforge.repair import (
+from specfreeze.decision import answer_questions, render_answers, uncertain
+from specfreeze.distill import distill
+from specfreeze.errors import PipelineError, ProviderError, SpecfreezeError
+from specfreeze.models import Asked, Answer, FunctionSpec, SpecDocument
+from specfreeze.provider import OpenAICompatibleProvider, loads_json_reply
+from specfreeze.repair import (
     copy_tests,
     is_improvement,
     load_test_files,
     parse_test_command,
     repair,
 )
-from specforge.session import Session
-from specforge.specdoc import normalize_signature, parse_spec
-from specforge.store import RunStore
-from specforge.textutil import extract_code
+from specfreeze.session import Session
+from specfreeze.specdoc import normalize_signature, parse_spec
+from specfreeze.store import RunStore
+from specfreeze.textutil import extract_code
 
 _DECISION_FOLLOWUP_SYSTEM = (
     "You write closed follow-up design questions. Reply with JSON only. Do not write code."
@@ -68,17 +68,17 @@ def build_providers(settings: Settings) -> dict[str, OpenAICompatibleProvider]:
     """Construct a live provider per role. Refuses to invent a key or a URL."""
     missing = []
     if not any(settings.url_for(role) for role in ("decision", "spec", "code")):
-        missing.append("SPECFORGE_BASE_URL")
+        missing.append("SPECFREEZE_BASE_URL")
     if not any(settings.key_for(role) for role in ("decision", "spec", "code")):
-        missing.append("SPECFORGE_API_KEY")
+        missing.append("SPECFREEZE_API_KEY")
     if not settings.decision_model:
-        missing.append("SPECFORGE_DECISION_MODEL")
+        missing.append("SPECFREEZE_DECISION_MODEL")
     if not settings.code_model:
-        missing.append("SPECFORGE_CODE_MODEL")
+        missing.append("SPECFREEZE_CODE_MODEL")
     if missing:
         raise ProviderError(
             "missing " + ", ".join(missing) + ". "
-            "specforge does not ship an API key. Run `specforge demo` for the offline example."
+            "specfreeze does not ship an API key. Run `specfreeze demo` for the offline example."
         )
     providers = {}
     for role in ("decision", "spec", "code"):
@@ -195,7 +195,7 @@ def spec_stage(session: Session, *, threshold: float, force: bool) -> dict:
 def build_stage(session: Session, *, force: bool, write_path: Path | None) -> str:
     contract = load_contract(session.run.read("contract.json"))
     if not contract.get("frozen"):
-        raise PipelineError("build requires a frozen contract; run `specforge spec` first")
+        raise PipelineError("build requires a frozen contract; run `specfreeze spec` first")
     if session.run.exists("module.py") and session.run.exists("generated/initial.py") and not force:
         session.say("Reusing module.py (pass --force to generate again).")
         source = session.run.read("module.py")
@@ -225,7 +225,7 @@ def fix_stage(
     if not source_path.exists():
         source_path = session.run.path / "module.py"
     if not source_path.exists():
-        raise PipelineError("fix requires a generated module; run `specforge build` first")
+        raise PipelineError("fix requires a generated module; run `specfreeze build` first")
     source = source_path.read_text(encoding="utf-8")
     tests = load_test_files(session.run.path)
     if not tests:
@@ -459,7 +459,7 @@ def _model_followups(session, answers: list[Answer], spec: SpecDocument, thresho
         return []
     try:
         return questions_from_model(payload, round_no=1, module=spec.module)[:limit]
-    except SpecforgeError as exc:
+    except SpecfreezeError as exc:
         session.say(f"Ignoring model follow-ups: {exc}")
         return []
 
@@ -552,7 +552,7 @@ def _fill_signatures(session: Session, spec: SpecDocument) -> SpecDocument:
 
 def _spec_from_run(run: RunStore) -> SpecDocument:
     if not run.exists("decomposition.json"):
-        raise PipelineError("spec stage needs decomposition.json; run `specforge ask` first")
+        raise PipelineError("spec stage needs decomposition.json; run `specfreeze ask` first")
     raw = run.read("SPEC.md") if run.exists("SPEC.md") else ""
     return SpecDocument.from_dict(json.loads(run.read("decomposition.json")), raw=raw)
 
@@ -572,7 +572,7 @@ def _write_contract(run: RunStore, contract: dict) -> None:
 
 def _write_report(session: Session, contract: dict, report) -> None:
     payload = {
-        "tool": "specforge",
+        "tool": "specfreeze",
         "version": __version__,
         "module": contract["module"],
         "digest": contract.get("digest"),
@@ -637,7 +637,7 @@ def _export(source: str, destination: Path, session: Session) -> None:
 def make_live_session(out: Path, *, force: bool, quiet: bool) -> Session:
     settings = load_settings()
     if settings.provider == "fake":
-        raise ProviderError("SPECFORGE_PROVIDER=fake has no recording. Use `specforge demo` for the offline run.")
+        raise ProviderError("SPECFREEZE_PROVIDER=fake has no recording. Use `specfreeze demo` for the offline run.")
     run = RunStore.open(out, force=force)
     return open_session(settings, run, build_providers(settings), quiet=quiet)
 

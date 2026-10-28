@@ -6,14 +6,14 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from specforge import __version__
-from specforge.errors import PipelineError
+from specfreeze import __version__
+from specfreeze.errors import PipelineError
 
 _MARKER = "run.json"
 
 
 class RunStore:
-    """Artifacts for one specforge run."""
+    """Artifacts for one specfreeze run."""
 
     def __init__(self, path: Path):
         self.path = path
@@ -29,21 +29,21 @@ class RunStore:
             marker = root / _MARKER
             if not marker.exists():
                 raise PipelineError(
-                    f"{root} is not empty and is not a specforge run. Choose another --out directory."
+                    f"{root} is not empty and is not a specfreeze run. Choose another --out directory."
                 )
             try:
                 data = json.loads(marker.read_text(encoding="utf-8"))
             except json.JSONDecodeError as exc:
                 raise PipelineError(f"{marker} is not valid JSON") from exc
-            if data.get("tool") != "specforge":
-                raise PipelineError(f"{root} is not a specforge run. Choose another --out directory.")
+            if data.get("tool") != "specfreeze":
+                raise PipelineError(f"{root} is not a specfreeze run. Choose another --out directory.")
         root.mkdir(parents=True, exist_ok=True)
         store = cls(root)
         if not (root / _MARKER).exists():
             store.write_json(
                 _MARKER,
                 {
-                    "tool": "specforge",
+                    "tool": "specfreeze",
                     "version": __version__,
                     "created": _now(),
                 },

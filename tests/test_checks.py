@@ -5,8 +5,8 @@ from types import ModuleType
 
 import pytest
 
-from specforge.assemble import assemble, replace_part, split_group
-from specforge.checks import (
+from specfreeze.assemble import assemble, replace_part, split_group
+from specfreeze.checks import (
     blame,
     call_violations,
     detect_coupling,
@@ -92,7 +92,7 @@ def test_coupling_from_traceback_span():
 
 def test_header_attribute_conflict():
     header = '"""cfg: x"""\nfrom __future__ import annotations\nimport json\n'
-    source = header + "\n# ---- load_config (specforge)\ndef load_config(raw: str) -> dict:\n    return json.loads_nope(raw)\n"
+    source = header + "\n# ---- load_config (specfreeze)\ndef load_config(raw: str) -> dict:\n    return json.loads_nope(raw)\n"
     output = "AttributeError: module 'json' has no attribute 'loads_nope'\n"
     conflicts = header_conflicts_in_output(output, source, header)
     assert conflicts
@@ -150,7 +150,7 @@ def test_header_conflict_after_module_binding_is_restored():
     header = "from json import loads as json\nimport json\n"
     source = (
         header
-        + "\n# ---- load_config (specforge)\n"
+        + "\n# ---- load_config (specfreeze)\n"
         + "def load_config(raw: str) -> dict:\n"
         + "    return json.loads_nope(raw)\n"
     )
@@ -167,7 +167,7 @@ def test_header_conflict_after_module_binding_is_restored():
 @pytest.mark.parametrize("cached", [False, True])
 @pytest.mark.parametrize("suffix", ["", ".child"])
 def test_module_has_attr_skips_nonstdlib_modules(monkeypatch, cached, suffix):
-    root = "_specforge_nonstdlib_probe"
+    root = "_specfreeze_nonstdlib_probe"
     assert root not in sys.stdlib_module_names
     probes = []
 
@@ -186,7 +186,7 @@ def test_module_has_attr_skips_nonstdlib_modules(monkeypatch, cached, suffix):
         monkeypatch.setitem(sys.modules, root, module)
 
     monkeypatch.setattr(
-        "specforge.checks.importlib.import_module", import_probe
+        "specfreeze.checks.importlib.import_module", import_probe
     )
 
     assert module_has_attr(root + suffix, "missing") is None
