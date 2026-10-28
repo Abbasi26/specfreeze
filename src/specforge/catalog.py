@@ -223,7 +223,8 @@ def _question(item, source: str, seen: set[str]) -> QuestionTemplate:
         raise CatalogError(f"{source}: question {qid} contract_note must be a mapping")
     for key in notes:
         _check_answer_token(qtype, str(key), options, levels, source, qid)
-    followups = [_followup(raw, source, qid, set()) for raw in (item.get("followups") or [])]
+    followup_ids: set[str] = set()
+    followups = [_followup(raw, source, qid, followup_ids) for raw in (item.get("followups") or [])]
     return QuestionTemplate(
         id=qid,
         category=category,
@@ -284,7 +285,8 @@ def _followup(item, source: str, parent: str, seen: set[str]) -> Followup:
     notes = item.get("contract_note") or {}
     if notes and not isinstance(notes, dict):
         raise CatalogError(f"{source}: follow-up {parent}.{qid} contract_note must be a mapping")
-    nested = [_followup(raw, source, qid, set()) for raw in (item.get("followups") or [])]
+    nested_ids: set[str] = set()
+    nested = [_followup(raw, source, qid, nested_ids) for raw in (item.get("followups") or [])]
     return Followup(
         id=qid,
         category=category,
@@ -390,3 +392,4 @@ def _triggered(follow: Followup, answer) -> bool:
     if follow.when_confidence_below is not None:
         matched = matched and answer.confidence < follow.when_confidence_below
     return matched
+

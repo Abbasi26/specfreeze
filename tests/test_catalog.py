@@ -95,3 +95,48 @@ def _answer(key: str, value: str, confidence: float) -> Answer:
         effective=value,
         effective_source="model",
     )
+
+
+@pytest.mark.parametrize("nested", [False, True])
+@pytest.mark.parametrize("duplicate", [False, True])
+def test_followup_sibling_ids(nested, duplicate):
+    import json
+
+    children = [
+        {"id": "first", "type": "yes_no", "ask": "First?", "when_answer": "yes"},
+        {
+            "id": "first" if duplicate else "second",
+            "type": "yes_no",
+            "ask": "Second?",
+            "when_answer": "yes",
+        },
+    ]
+    question = {"id": "root", "type": "yes_no", "ask": "Root?"}
+    if nested:
+        question["followups"] = [
+            {
+                "id": "branch",
+                "type": "yes_no",
+                "ask": "Branch?",
+                "when_answer": "yes",
+                "followups": children,
+            }
+        ]
+    else:
+        question["followups"] = children
+    text = json.dumps({"version": 1, "name": "siblings", "questions": [question]})
+
+    if duplicate:
+        parent = "branch" if nested else "root"
+        with pytest.raises(CatalogError) as exc:
+            parse_catalog(text, source="siblings.yaml")
+        assert str(exc.value) == (
+            f"siblings.yaml: duplicate follow-up first under {parent}"
+        )
+    else:
+        catalog = parse_catalog(text, source="siblings.yaml")
+        followups = catalog.questions[0].followups
+        if nested:
+            followups = followups[0].followups
+        assert [follow.id for follow in followups] == ["first", "second"]
+
