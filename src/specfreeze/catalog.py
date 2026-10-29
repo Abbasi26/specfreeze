@@ -261,6 +261,8 @@ def _followup(item, source: str, parent: str, seen: set[str]) -> Followup:
         raise CatalogError(f"{source}: choice follow-up {parent}.{qid} needs 2 to 6 options")
     if qtype == "score" and not (2 <= len(levels) <= 5):
         raise CatalogError(f"{source}: score follow-up {parent}.{qid} needs 2 to 5 levels")
+    if qtype == "yes_no" and (options or levels):
+        raise CatalogError(f"{source}: yes/no follow-up {parent}.{qid} cannot set options or levels")
     when = item.get("when_answer")
     when_list: list[str] = []
     if when is not None:
@@ -392,4 +394,5 @@ def _triggered(follow: Followup, answer) -> bool:
     if follow.when_confidence_below is not None:
         matched = matched and answer.confidence < follow.when_confidence_below
     return matched
+
 

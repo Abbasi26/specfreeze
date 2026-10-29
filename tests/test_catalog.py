@@ -140,3 +140,56 @@ def test_followup_sibling_ids(nested, duplicate):
             followups = followups[0].followups
         assert [follow.id for follow in followups] == ["first", "second"]
 
+
+@pytest.mark.parametrize("nested", [False, True])
+@pytest.mark.parametrize("qtype", ["yes_no", "noul", "bool", "yesno"])
+@pytest.mark.parametrize(
+    "fields",
+    [{}, {"options": {}, "levels": []},
+     {"options": {"yes": "Yes", "no": "No"}}, {"levels": ["low", "high"]}],
+)
+def test_yes_no_followup_rejects_options_or_levels(nested, qtype, fields):
+    import json
+
+    followup = {
+        "id": "child",
+        "type": qtype,
+        "ask": "Continue?",
+        "when_answer": "yes",
+        **fields,
+    }
+    question = {"id": "root", "type": "yes_no", "ask": "Start?"}
+    if nested:
+        question["followups"] = [{
+            "id": "branch",
+            "type": "yes_no",
+            "ask": "Branch?",
+            "when_answer": "yes",
+            "followups": [followup],
+        }]
+    else:
+        question["followups"] = [followup]
+    text = json.dumps({
+        "version": 1,
+        "name": "validation",
+        "questions": [question],
+    })
+
+    if fields.get("options") or fields.get("levels"):
+        parent = "branch" if nested else "root"
+        with pytest.raises(CatalogError) as exc:
+            parse_catalog(text, source="validation.yaml")
+        assert str(exc.value) == (
+            f"validation.yaml: yes/no follow-up {parent}.child "
+            "cannot set options or levels"
+        )
+    else:
+        catalog = parse_catalog(text, source="validation.yaml")
+        child = catalog.questions[0].followups[0]
+        if nested:
+            child = child.followups[0]
+        assert child.type == "yes_no"
+
+
+# Skipped unrelated parser hardening and rename work; no files changed or tests run.
+# Risk: previously accepted yes/no follow-ups with non-empty options or levels will fail validation.
