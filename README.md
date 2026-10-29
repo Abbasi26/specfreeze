@@ -6,6 +6,14 @@ Decide the design in closed questions, freeze the interface, then let a code mod
 
 Large language models write plausible code for vague requirements, and the plausible choice is often one you did not make. specfreeze is a local Python command-line tool that asks those decisions up front, freezes them as a contract, and refuses implementations and repairs that drift from it.
 
+## Demo video
+
+[![Demo video for specfreeze](docs/media/brag.jpg)](docs/media/brag.mp4)
+
+specfreeze turns closed design decisions into a frozen Python contract, rejects repairs that move the interface, and provides a static `verify` gate for later edits. (Click the image to play the video.)
+
+Music: Sascha Ende ([ende.app](https://ende.app)), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
 ## The problem
 
 Ask a model to "split the bill fairly" and it has to invent the policy. For 100 cents and 3 people it might return `[33, 33, 33]` and drop a cent, put the leftover on the last share, or add a `mode` parameter nobody requested.
