@@ -6,7 +6,7 @@
   </picture>
 </p>
 
-<p align="center">Decide the design in closed questions, freeze the interface, then let a code model implement it.</p>
+<p align="center">Freezes design decisions as a contract and rejects code that drifts.</p>
 
 <p align="center">
   <img src="docs/assets/readme-hero.png" width="800" alt="Terminal output of specfreeze demo: 13 answers, a frozen contract, one repair rejected for changing the signature, one accepted, tests going from 8 passed / 2 failed to 10 passed.">
