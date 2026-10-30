@@ -1,3 +1,17 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/logo-light.svg">
+    <img src="docs/assets/logo-light.svg" alt="specfreeze" height="64">
+  </picture>
+</p>
+
+<p align="center">Decide the design in closed questions, freeze the interface, then let a code model implement it.</p>
+
+<p align="center">
+  <img src="docs/assets/readme-hero.png" width="800" alt="Terminal output of specfreeze demo: 13 answers, a frozen contract, one repair rejected for changing the signature, one accepted, tests going from 8 passed / 2 failed to 10 passed.">
+</p>
+
 # specfreeze
 
 [![CI](https://github.com/Abbasi26/specfreeze/actions/workflows/ci.yml/badge.svg)](https://github.com/Abbasi26/specfreeze/actions/workflows/ci.yml)
