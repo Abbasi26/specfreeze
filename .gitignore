@@ -10,3 +10,4 @@ build/
 .env.*
 uploads/
 agent-tools/.venv/
+.tmp/

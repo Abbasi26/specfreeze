@@ -1,0 +1,4 @@
+# Baseline lint gate: syntax errors and pyflakes (ruff's default rule set).
+# Stricter rules can be added here once the code is clean for them.
+[lint]
+select = ["E4", "E7", "E9", "F"]
