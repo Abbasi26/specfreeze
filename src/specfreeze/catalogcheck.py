@@ -34,9 +34,15 @@ def summarize(catalog: Catalog) -> dict:
     }
 
 
-def check_catalogs(paths: list[Path]) -> tuple[list[str], int]:
-    """Return printable lines and the number of failing files."""
+def check_catalogs(paths: list[Path]) -> tuple[list[str], int, list[dict]]:
+    """Return printable lines, the number of failing files, and a JSON-capable summary per file.
+
+    Each summary dict has ``path``, ``ok``, ``name``, ``questions``, ``followups``,
+    ``types``, ``categories``, ``with_conservative`` and ``missing_conservative``.
+    A failing file instead carries ``ok: false`` and an ``error`` string.
+    """
     lines: list[str] = []
+    summaries: list[dict] = []
     failed = 0
     for path in paths:
         try:
@@ -44,15 +50,36 @@ def check_catalogs(paths: list[Path]) -> tuple[list[str], int]:
         except (CatalogError, OSError, ValueError, TypeError) as exc:
             failed += 1
             lines.append(f"FAIL {path}: {exc}")
+            summaries.append(
+                {
+                    "path": str(path),
+                    "ok": False,
+                    "error": str(exc),
+                }
+            )
             continue
+        missing = info["questions"] - info["with_conservative"]
         types = ", ".join(f"{k} {v}" for k, v in info["types"].items())
         lines.append(
             f"ok   {path}: {info['name']}: {info['questions']} questions ({types}), "
             f"{info['followups']} follow-ups, {info['with_conservative']} with a conservative default"
         )
-        if info["with_conservative"] < info["questions"]:
+        if missing:
             lines.append(
-                f"     note: {info['questions'] - info['with_conservative']} question(s) have no `conservative` value; "
+                f"     note: {missing} question(s) have no `conservative` value; "
                 "a low-confidence answer is then used as given"
             )
-    return lines, failed
+        summaries.append(
+            {
+                "path": str(path),
+                "ok": True,
+                "name": info["name"],
+                "questions": info["questions"],
+                "followups": info["followups"],
+                "types": info["types"],
+                "categories": info["categories"],
+                "with_conservative": info["with_conservative"],
+                "missing_conservative": missing,
+            }
+        )
+    return lines, failed, summaries

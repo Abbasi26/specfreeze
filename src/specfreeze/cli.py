@@ -88,6 +88,7 @@ def main(argv: list[str] | None = None) -> int:
     catalog_sub = catalog.add_subparsers(dest="catalog_command", required=True)
     catalog_check = catalog_sub.add_parser("check", help="validate one or more catalog files")
     catalog_check.add_argument("paths", nargs="+", type=Path)
+    catalog_check.add_argument("--json", action="store_true", help="print a machine-readable summary")
     catalog_check.set_defaults(func=_cmd_catalog_check)
     catalog_print = catalog_sub.add_parser("print", help="print the shipped general catalog as a starting point")
     catalog_print.set_defaults(func=_cmd_catalog_print)
@@ -217,11 +218,17 @@ def _cmd_verify(args) -> int:
 
 
 def _cmd_catalog_check(args) -> int:
+    import json
+
     from specfreeze.catalogcheck import check_catalogs
 
-    lines, failed = check_catalogs(args.paths)
-    for line in lines:
-        print(line)
+    lines, failed, summaries = check_catalogs(args.paths)
+    if args.json:
+        sys.stdout.write(json.dumps({"files": summaries}, indent=2))
+        sys.stdout.write("\n")
+    else:
+        for line in lines:
+            print(line)
     return 1 if failed else 0
 
 
