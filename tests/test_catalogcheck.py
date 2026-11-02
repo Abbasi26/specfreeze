@@ -25,3 +25,29 @@ def test_print_round_trips(tmp_path, capsys):
     path = tmp_path / "mine.yaml"
     path.write_text(capsys.readouterr().out, encoding="utf-8")
     assert main(["catalog", "check", str(path)]) == 0
+
+
+def test_duplicate_ask_text_is_reported(tmp_path, capsys):
+    path = tmp_path / "dup.yaml"
+    path.write_text(
+        "version: 1\nname: dup\nquestions:\n"
+        "  - id: q1\n    category: c\n    type: yes_no\n    ask: Is it?\n    conservative: 'yes'\n"
+        "  - id: q2\n    category: c\n    type: yes_no\n    ask: Is it?\n    conservative: 'yes'\n",
+        encoding="utf-8",
+    )
+    assert main(["catalog", "check", str(path)]) == 0
+    out = capsys.readouterr().out
+    assert "warning" in out and "ask text(s)" in out and "Is it?" in out
+
+
+def test_distinct_ask_texts_are_silent(tmp_path, capsys):
+    path = tmp_path / "ok.yaml"
+    path.write_text(
+        "version: 1\nname: ok\nquestions:\n"
+        "  - id: q1\n    category: c\n    type: yes_no\n    ask: First?\n    conservative: 'yes'\n"
+        "  - id: q2\n    category: c\n    type: yes_no\n    ask: Second?\n    conservative: 'yes'\n",
+        encoding="utf-8",
+    )
+    assert main(["catalog", "check", str(path)]) == 0
+    out = capsys.readouterr().out
+    assert "warning" not in out and "ask text(s)" not in out

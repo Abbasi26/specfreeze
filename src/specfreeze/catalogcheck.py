@@ -16,6 +16,19 @@ def count_followups(items) -> int:
     return total
 
 
+def duplicate_asks(catalog) -> list[str]:
+    """Return ``ask`` texts that more than one top-level question shares.
+
+    Placeholders such as ``{function}`` are left in place, so two questions
+    that differ only by which function they target still look identical. A
+    repeated template is usually a copy-paste mistake, not a feature.
+    """
+    seen: dict[str, int] = {}
+    for question in catalog.questions:
+        seen[question.ask] = seen.get(question.ask, 0) + 1
+    return sorted(text for text, count in seen.items() if count > 1)
+
+
 def summarize(catalog: Catalog) -> dict:
     by_type: dict[str, int] = {}
     categories: set[str] = set()
@@ -40,7 +53,8 @@ def check_catalogs(paths: list[Path]) -> tuple[list[str], int]:
     failed = 0
     for path in paths:
         try:
-            info = summarize(load_catalog(path))
+            catalog = load_catalog(path)
+            info = summarize(catalog)
         except (CatalogError, OSError, ValueError, TypeError) as exc:
             failed += 1
             lines.append(f"FAIL {path}: {exc}")
@@ -55,4 +69,12 @@ def check_catalogs(paths: list[Path]) -> tuple[list[str], int]:
                 f"     note: {info['questions'] - info['with_conservative']} question(s) have no `conservative` value; "
                 "a low-confidence answer is then used as given"
             )
+        duplicates = duplicate_asks(catalog)
+        if duplicates:
+            lines.append(
+                f"     warning: {len(duplicates)} ask text(s) are used by more than one question; "
+                "a repeated template is usually a copy-paste mistake"
+            )
+            for text in duplicates:
+                lines.append(f"       - {text}")
     return lines, failed
