@@ -25,7 +25,6 @@ specfreeze stays a small, local checker: closed questions first, a frozen contra
 
 ## Good first issues
 
-- `verify`: report the line number of each problem.
 - `verify`: accept several modules and contracts in one call (`--pair module.py=contract.json`).
 - `catalog check`: warn when two questions have the same `ask` text.
 - `catalog check --json` for editors and CI.

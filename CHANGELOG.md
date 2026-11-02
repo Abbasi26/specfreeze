@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `specfreeze verify` reports source line numbers for located problems in text and JSON output.
+
 ## 0.2.0 - 2026-10-28
 
 - `specfreeze verify MODULE --contract RUN_DIR|contract.json`: static, offline check of any module against a frozen contract (signatures, frozen constants, calls, async drift, extra public names). `--json`; exit 0 clean, 1 drift, 2 error. Tampered contracts are refused.

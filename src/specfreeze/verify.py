@@ -12,7 +12,12 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from specfreeze.checks import call_violations, header_bindings, missing_constants, module_signature_violations
+from specfreeze.checks import (
+    call_violation_details,
+    header_bindings,
+    missing_constants,
+    module_signature_violation_details,
+)
 from specfreeze.contract import constant_names, load_contract, signatures_of
 from specfreeze.errors import ContractError
 
@@ -21,6 +26,7 @@ from specfreeze.errors import ContractError
 class Problem:
     kind: str
     message: str
+    line: int | None = None
 
 
 @dataclass
@@ -47,7 +53,10 @@ class VerifyResult:
             "functions": self.functions,
             "constants": self.constants,
             "ok": self.ok,
-            "problems": [{"kind": p.kind, "message": p.message} for p in self.problems],
+            "problems": [
+                {"kind": p.kind, "message": p.message, "line": p.line}
+                for p in self.problems
+            ],
         }
 
 
@@ -81,16 +90,16 @@ def verify_source(source: str, contract: dict) -> VerifyResult:
     try:
         tree = ast.parse(source)
     except SyntaxError as exc:
-        result.problems.append(Problem("syntax", f"module does not parse: {exc}"))
+        result.problems.append(Problem("syntax", f"module does not parse: {exc}", exc.lineno))
         return result
 
-    for message in module_signature_violations(source, signatures):
-        result.problems.append(Problem("signature", message))
+    for line, message in module_signature_violation_details(source, signatures):
+        result.problems.append(Problem("signature", message, line))
     for message in missing_constants(source, constants):
         result.problems.append(Problem("constant", message))
     result.problems.extend(_constant_changes(tree, contract))
-    for message in call_violations(source, signatures):
-        result.problems.append(Problem("call", message))
+    for line, message in call_violation_details(source, signatures):
+        result.problems.append(Problem("call", message, line))
 
     allowed = set(signatures) | set(header_bindings(contract.get("header") or ""))
     for node in tree.body:
@@ -99,10 +108,16 @@ def verify_source(source: str, contract: dict) -> VerifyResult:
                 continue
             kind = "class" if isinstance(node, ast.ClassDef) else "function"
             result.problems.append(
-                Problem("extra_public", f"public {kind} `{node.name}` is not in the contract; make it private (`_{node.name}`) or add it to the spec")
+                Problem(
+                    "extra_public",
+                    f"public {kind} `{node.name}` is not in the contract; make it private (`_{node.name}`) or add it to the spec",
+                    node.lineno,
+                )
             )
         if isinstance(node, ast.AsyncFunctionDef) and node.name in signatures:
-            result.problems.append(Problem("signature", f"`{node.name}` is async; the contract freezes a plain function"))
+            result.problems.append(
+                Problem("signature", f"`{node.name}` is async; the contract freezes a plain function", node.lineno)
+            )
     return result
 
 
@@ -126,7 +141,8 @@ def render_text(result: VerifyResult, module_path: str) -> str:
     else:
         lines.append(f"{len(result.problems)} problem(s):")
         for problem in result.problems:
-            lines.append(f"  [{problem.kind}] {problem.message}")
+            location = f" line {problem.line}" if problem.line is not None else ""
+            lines.append(f"  [{problem.kind}]{location}: {problem.message}")
     return "\n".join(lines)
 
 
@@ -146,7 +162,7 @@ def _constant_changes(tree: ast.Module, contract: dict) -> list[Problem]:
             if isinstance(node, (ast.Assign, ast.AnnAssign)) and node.value is not None:
                 frozen[item["name"]] = ast.dump(node.value)
     problems = []
-    seen: dict[str, int] = {}
+    seen: dict[str, list[int]] = {}
     for node in tree.body:
         targets = []
         value = None
@@ -161,12 +177,16 @@ def _constant_changes(tree: ast.Module, contract: dict) -> list[Problem]:
         for name in targets:
             if name not in frozen:
                 continue
-            seen[name] = seen.get(name, 0) + 1
+            seen.setdefault(name, []).append(node.lineno)
             if value is None:
-                problems.append(Problem("constant", f"frozen constant `{name}` is modified in place"))
+                problems.append(Problem("constant", f"frozen constant `{name}` is modified in place", node.lineno))
             elif ast.dump(value) != frozen[name]:
-                problems.append(Problem("constant", f"frozen constant `{name}` has a different value than the contract"))
-    for name, count in seen.items():
-        if count > 1:
-            problems.append(Problem("constant", f"frozen constant `{name}` is assigned {count} times"))
+                problems.append(
+                    Problem("constant", f"frozen constant `{name}` has a different value than the contract", node.lineno)
+                )
+    for name, lines in seen.items():
+        if len(lines) > 1:
+            problems.append(
+                Problem("constant", f"frozen constant `{name}` is assigned {len(lines)} times", lines[-1])
+            )
     return problems

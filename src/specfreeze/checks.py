@@ -156,10 +156,17 @@ def part_check(
 
 def module_signature_violations(source: str, signatures: dict[str, str]) -> list[str]:
     """Every contract function must appear once, with the frozen signature."""
+    return [message for _, message in module_signature_violation_details(source, signatures)]
+
+
+def module_signature_violation_details(
+    source: str, signatures: dict[str, str]
+) -> list[tuple[int | None, str]]:
+    """Signature violations paired with their source line, when one exists."""
     try:
         tree = ast.parse(source)
     except SyntaxError as exc:
-        return [f"module does not parse: {exc}"]
+        return [(exc.lineno, f"module does not parse: {exc}")]
     found: dict[str, list[ast.FunctionDef]] = {}
     for node in tree.body:
         if isinstance(node, ast.FunctionDef):
@@ -168,18 +175,27 @@ def module_signature_violations(source: str, signatures: dict[str, str]) -> list
     for name, signature in signatures.items():
         defs = found.get(name, [])
         if len(defs) != 1:
-            violations.append(f"`{name}` is defined {len(defs)} times; the contract requires one")
+            line = defs[0].lineno if defs else None
+            violations.append((line, f"`{name}` is defined {len(defs)} times; the contract requires one"))
             continue
         if function_key(defs[0]) != signature_key(signature):
             violations.append(
-                "signature deviates from the frozen contract: "
-                f"expected `{signature}`, got `{_source_signature(defs[0])}`"
+                (
+                    defs[0].lineno,
+                    "signature deviates from the frozen contract: "
+                    f"expected `{signature}`, got `{_source_signature(defs[0])}`",
+                )
             )
     return violations
 
 
 def call_violations(source: str, signatures: dict[str, str]) -> list[str]:
     """Flag calls whose arguments cannot match the frozen signature."""
+    return [message for _, message in call_violation_details(source, signatures)]
+
+
+def call_violation_details(source: str, signatures: dict[str, str]) -> list[tuple[int, str]]:
+    """Invalid calls paired with their source line."""
     try:
         tree = ast.parse(source)
     except SyntaxError:
@@ -210,8 +226,11 @@ def call_violations(source: str, signatures: dict[str, str]) -> list[str]:
         if problems:
             owner = owners.get(getattr(node, "lineno", 0), "?")
             violations.append(
-                f"{owner}: call `{node.func.id}(...)` does not match `{signatures[node.func.id]}`: "
-                + "; ".join(problems)
+                (
+                    node.lineno,
+                    f"{owner}: call `{node.func.id}(...)` does not match `{signatures[node.func.id]}`: "
+                    + "; ".join(problems),
+                )
             )
     return violations
 
@@ -446,5 +465,4 @@ def _local_for(bindings: dict[str, str], module: str) -> str | None:
         if target == module or local == module or target.split(".")[0] == module.split(".")[0] and local == module.split(".")[0]:
             return local
     return None
-
 

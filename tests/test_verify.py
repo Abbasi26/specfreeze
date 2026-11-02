@@ -5,7 +5,7 @@ import pytest
 from specfreeze.cli import main
 from specfreeze.contract import dump_contract
 from specfreeze.demo import run_demo
-from specfreeze.verify import verify_file, verify_source
+from specfreeze.verify import render_json, render_text, verify_file, verify_source
 
 
 @pytest.fixture(scope="module")
@@ -94,3 +94,34 @@ def test_unfrozen_contract_is_a_problem(demo_run):
     contract["frozen"] = False
     result = verify_source((demo_run / "portion.py").read_text(encoding="utf-8"), contract)
     assert _kinds(result) == ["not_frozen"]
+
+
+def test_problems_include_source_lines():
+    contract = {
+        "module": "sample",
+        "digest": "",
+        "frozen": True,
+        "header": "LIMIT = 3\n",
+        "constants": [{"name": "LIMIT", "code": "LIMIT = 3"}],
+        "functions": [
+            {"name": "target", "signature": "def target(value: int) -> int:"}
+        ],
+    }
+    source = (
+        "LIMIT = 4\n\n"
+        "def target(value: str) -> int:\n"
+        "    return target()\n\n"
+        "class Public:\n"
+        "    pass\n"
+    )
+
+    result = verify_source(source, contract)
+
+    assert {(problem.kind, problem.line) for problem in result.problems} == {
+        ("signature", 3),
+        ("constant", 1),
+        ("call", 4),
+        ("extra_public", 6),
+    }
+    assert "[call] line 4:" in render_text(result, "sample.py")
+    assert json.loads(render_json(result))["problems"][0]["line"] == 3
