@@ -64,7 +64,27 @@ Add a `sep` parameter to `format_shares`, change `SEPARATOR`, and add a public `
   [extra_public] public function `helper` is not in the contract; make it private (`_helper`) or add it to the spec
 ```
 
-`verify` parses the file with `ast`. It never imports or runs it, needs no API key, and opens no network connection. It checks signatures, missing, changed, or reassigned frozen constants, calls that cannot match a frozen signature, async drift, and public names that are not in the contract. A contract whose digest no longer matches is refused (exit 2). `--json` prints a machine-readable result. Exit codes: 0 clean, 1 drift, 2 usage or contract error.
+With `--format markdown`:
+
+```markdown
+# specfreeze verify: failed
+
+- **Module**: `portion.py`
+- **Contract**: `portion`
+- **Digest**: `3553ade96946`
+- **Functions**: 2
+- **Constants**: 1
+
+3 problem(s):
+
+| Kind | Message |
+|-----|---------|
+| signature | signature deviates from the frozen contract: expected `def format_shares(shares: list[int]) -> str:`, got `def format_shares(shares: list[int], sep: str=',') -> str:` |
+| constant | frozen constant `SEPARATOR` has a different value than the contract |
+| extra_public | public function `helper` is not in the contract; make it private (`_helper`) or add it to the spec |
+```
+
+`verify` parses the file with `ast`. It never imports or runs it, needs no API key, and opens no network connection. It checks signatures, missing, changed, or reassigned frozen constants, calls that cannot match a frozen signature, async drift, and public names that are not in the contract. A contract whose digest no longer matches is refused (exit 2). `--format json` prints a machine-readable result. `--format markdown` prints a heading with the result (passed / failed) and a Markdown table of the problems, suitable for pull-request comments and job summaries. Exit codes: 0 clean, 1 drift, 2 usage or contract error.
 
 To run it in CI, commit `contract.json` next to the module and copy [examples/github-actions/contract-gate.yml](examples/github-actions/contract-gate.yml).
 
