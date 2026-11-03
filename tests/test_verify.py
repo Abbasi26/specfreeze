@@ -5,7 +5,7 @@ import pytest
 from specfreeze.cli import main
 from specfreeze.contract import dump_contract
 from specfreeze.demo import run_demo
-from specfreeze.verify import verify_file, verify_source
+from specfreeze.verify import render_markdown, verify_file, verify_source
 
 
 @pytest.fixture(scope="module")
@@ -74,9 +74,11 @@ def test_cli_exit_codes_and_json(demo_run, tmp_path, capsys):
     assert "OK:" in capsys.readouterr().out
     bad = tmp_path / "bad.py"
     bad.write_text((demo_run / "portion.py").read_text(encoding="utf-8") + "\ndef extra():\n    pass\n", encoding="utf-8")
-    assert main(["verify", str(bad), "--contract", str(demo_run), "--json"]) == 1
+    assert main(["verify", str(bad), "--contract", str(demo_run), "--format", "json"]) == 1
     data = json.loads(capsys.readouterr().out)
     assert data["ok"] is False and data["problems"][0]["kind"] == "extra_public"
+    assert main(["verify", str(bad), "--contract", str(demo_run), "--json"]) == 1
+    assert json.loads(capsys.readouterr().out) == data
     assert main(["verify", str(tmp_path / "missing.py"), "--contract", str(demo_run)]) == 2
 
 
@@ -94,3 +96,36 @@ def test_unfrozen_contract_is_a_problem(demo_run):
     contract["frozen"] = False
     result = verify_source((demo_run / "portion.py").read_text(encoding="utf-8"), contract)
     assert _kinds(result) == ["not_frozen"]
+
+
+def test_render_markdown_ok(demo_run):
+    result = verify_file(demo_run / "portion.py", demo_run)
+    md = render_markdown(result, "portion.py")
+    assert "# specfreeze verify: passed" in md
+    assert "No problems found." in md
+    assert "| Kind | Message |" not in md
+
+
+def test_render_markdown_problems(demo_run, tmp_path):
+    source = (demo_run / "portion.py").read_text(encoding="utf-8")
+    bad = source + "\ndef extra():\n    pass\n"
+    bad_path = tmp_path / "bad.py"
+    bad_path.write_text(bad, encoding="utf-8")
+    result = verify_file(bad_path, demo_run)
+    md = render_markdown(result, "bad.py")
+    assert "# specfreeze verify: failed" in md
+    assert "| Kind | Message |" in md
+    assert "extra_public" in md
+    assert "extra" in md
+
+
+def test_cli_markdown_format(demo_run, tmp_path, capsys):
+    assert main(["verify", str(demo_run / "portion.py"), "--contract", str(demo_run), "--format", "markdown"]) == 0
+    out = capsys.readouterr().out
+    assert "# specfreeze verify: passed" in out
+    bad = tmp_path / "bad.py"
+    bad.write_text((demo_run / "portion.py").read_text(encoding="utf-8") + "\ndef extra():\n    pass\n", encoding="utf-8")
+    assert main(["verify", str(bad), "--contract", str(demo_run), "--format", "markdown"]) == 1
+    out = capsys.readouterr().out
+    assert "# specfreeze verify: failed" in out
+    assert "| Kind | Message |" in out

@@ -81,7 +81,13 @@ def main(argv: list[str] | None = None) -> int:
     verify.add_argument(
         "--contract", required=True, type=Path, help="contract.json or a run directory that contains it"
     )
-    verify.add_argument("--json", action="store_true", help="print a JSON result")
+    verify.add_argument(
+        "--format",
+        choices=["text", "json", "markdown"],
+        default="text",
+        help="output format (default: text)",
+    )
+    verify.add_argument("--json", action="store_true", help="same as --format json")
     verify.set_defaults(func=_cmd_verify)
 
     catalog = sub.add_parser("catalog", parents=[shared], help="check or print question catalogs")
@@ -206,11 +212,13 @@ def _cmd_run(args) -> int:
 
 
 def _cmd_verify(args) -> int:
-    from specfreeze.verify import render_json, render_text, verify_file
+    from specfreeze.verify import render_json, render_markdown, render_text, verify_file
 
     result = verify_file(args.module, args.contract)
-    if args.json:
+    if args.json or args.format == "json":
         sys.stdout.write(render_json(result))
+    elif args.format == "markdown":
+        sys.stdout.write(render_markdown(result, str(args.module)))
     else:
         print(render_text(result, str(args.module)))
     return 0 if result.ok else 1

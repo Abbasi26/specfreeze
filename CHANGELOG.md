@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `specfreeze verify --format markdown`: heading with result (passed / failed) and a Markdown table of problems for pull-request comments and job summaries. Default remains text output; exit codes unchanged.
+
 ## 0.2.0 - 2026-10-28
 
 - `specfreeze verify MODULE --contract RUN_DIR|contract.json`: static, offline check of any module against a frozen contract (signatures, frozen constants, calls, async drift, extra public names). `--json`; exit 0 clean, 1 drift, 2 error. Tampered contracts are refused.
