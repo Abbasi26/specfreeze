@@ -15,6 +15,7 @@
 # specfreeze
 
 [![CI](https://github.com/Abbasi26/specfreeze/actions/workflows/ci.yml/badge.svg)](https://github.com/Abbasi26/specfreeze/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Decide the design in closed questions, freeze the interface, then let a code model implement it.
 
