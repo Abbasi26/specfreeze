@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `specfreeze verify --pair MODULE=CONTRACT` (repeatable): check several modules against their contracts in one call. Exit 1 if any module drifts; `--json` prints `ok` plus one single-module result per pair. The single-module form is unchanged.
+
 ## 0.2.0 - 2026-10-28
 
 - `specfreeze verify MODULE --contract RUN_DIR|contract.json`: static, offline check of any module against a frozen contract (signatures, frozen constants, calls, async drift, extra public names). `--json`; exit 0 clean, 1 drift, 2 error. Tampered contracts are refused.
