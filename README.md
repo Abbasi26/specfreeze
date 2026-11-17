@@ -65,7 +65,7 @@ Add a `sep` parameter to `format_shares`, change `SEPARATOR`, and add a public `
   [extra_public] public function `helper` is not in the contract; make it private (`_helper`) or add it to the spec
 ```
 
-`verify` parses the file with `ast`. It never imports or runs it, needs no API key, and opens no network connection. It checks signatures, missing, changed, or reassigned frozen constants, calls that cannot match a frozen signature, async drift, and public names that are not in the contract. A contract whose digest no longer matches is refused (exit 2). `--json` prints a machine-readable result. Exit codes: 0 clean, 1 drift, 2 usage or contract error.
+`verify` parses the file with `ast`. It never imports or runs it, needs no API key, and opens no network connection. It checks signatures, missing, changed, or reassigned frozen constants, calls that cannot match a frozen signature, async drift, and public names that are not in the contract. A contract whose digest no longer matches is refused (exit 2). `--json` prints a machine-readable result. To check several modules in one call, repeat `--pair MODULE=CONTRACT` (for example `--pair src/a.py=runs/a --pair src/b.py=runs/b/contract.json`); the exit code is 1 if any module drifts, and `--json` then prints `{"ok": ..., "results": [...]}` with one single-module entry per pair. Exit codes: 0 clean, 1 drift, 2 usage or contract error.
 
 To run it in CI, commit `contract.json` next to the module and copy [examples/github-actions/contract-gate.yml](examples/github-actions/contract-gate.yml).
 
