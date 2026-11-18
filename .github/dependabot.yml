@@ -1,0 +1,10 @@
+# Weekly Python dependency updates.
+# The uv ecosystem updates the exact pins in pyproject.toml / requirements-ci.in and recompiles the
+# hash-pinned requirements-ci.txt with the options recorded in its header (--universal, --python-version, --generate-hashes).
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
