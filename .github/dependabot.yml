@@ -1,0 +1,14 @@
+# Weekly Python dependency updates.
+# The uv ecosystem updates the exact pins in pyproject.toml / requirements-ci.in and recompiles the
+# hash-pinned requirements-ci.txt with the options recorded in its header (--universal, --python-version, --generate-hashes).
+# Cooldown: a new release is proposed only after it has been public for 7 days, so a malicious
+# release that PyPI pulls within hours (like agent-framework 1.26.1/1.26.2) never reaches a PR.
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
