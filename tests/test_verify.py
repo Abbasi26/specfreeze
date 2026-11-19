@@ -125,3 +125,30 @@ def test_problems_include_source_lines():
     }
     assert "[call] line 4:" in render_text(result, "sample.py")
     assert json.loads(render_json(result))["problems"][0]["line"] == 3
+
+
+def test_verify_several_pairs(demo_run, tmp_path, capsys):
+    good = f"{demo_run / 'portion.py'}={demo_run}"
+    assert main(["verify", "--pair", good, "--pair", f"{demo_run / 'portion.py'}={demo_run / 'contract.json'}"]) == 0
+    out = capsys.readouterr().out
+    assert out.count("OK:") == 2
+    assert "2 of 2 module(s) match" in out
+
+    bad = tmp_path / "bad.py"
+    bad.write_text((demo_run / "portion.py").read_text(encoding="utf-8") + "\ndef extra():\n    pass\n", encoding="utf-8")
+    assert main(["verify", "--pair", good, "--pair", f"{bad}={demo_run}", "--json"]) == 1
+    data = json.loads(capsys.readouterr().out)
+    assert data["ok"] is False
+    assert [entry["ok"] for entry in data["results"]] == [True, False]
+    assert data["results"][1]["problems"][0]["kind"] == "extra_public"
+
+
+def test_verify_pair_usage_errors(demo_run, capsys):
+    module = str(demo_run / "portion.py")
+    assert main(["verify", "--pair", "no-separator"]) == 2
+    assert "MODULE=CONTRACT" in capsys.readouterr().err
+    assert main(["verify", "--pair", f"{module}="]) == 2
+    assert main(["verify", module, "--contract", str(demo_run), "--pair", f"{module}={demo_run}"]) == 2
+    assert "not both" in capsys.readouterr().err
+    assert main(["verify", module]) == 2
+    assert main(["verify", "--pair", f"{demo_run / 'missing.py'}={demo_run}"]) == 2

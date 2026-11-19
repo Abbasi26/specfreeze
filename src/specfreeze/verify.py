@@ -150,6 +150,26 @@ def render_json(result: VerifyResult) -> str:
     return json.dumps(result.as_dict(), indent=2, ensure_ascii=False) + "\n"
 
 
+def parse_pair(value: str) -> tuple[Path, Path]:
+    """Split ``module.py=contract`` at the first ``=``. Both sides must be non-empty."""
+    module, sep, contract = value.partition("=")
+    if not sep or not module.strip() or not contract.strip():
+        raise ContractError(f"--pair expects MODULE=CONTRACT, got {value!r}")
+    return Path(module.strip()), Path(contract.strip())
+
+
+def render_json_many(results: list[VerifyResult]) -> str:
+    """One JSON document for several modules. Each entry has the single-module shape."""
+    document = {
+        "tool": "specfreeze",
+        "check": "verify",
+        "schema": 1,
+        "ok": all(result.ok for result in results),
+        "results": [result.as_dict() for result in results],
+    }
+    return json.dumps(document, indent=2, ensure_ascii=False) + "\n"
+
+
 def _constant_changes(tree: ast.Module, contract: dict) -> list[Problem]:
     frozen: dict[str, str] = {}
     for item in contract.get("constants") or []:

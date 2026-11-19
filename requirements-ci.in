@@ -1,0 +1,5 @@
+# Direct CI dependencies, same exact pins as pyproject.toml (runtime, dev extra and the setuptools build backend).
+# requirements-ci.txt is compiled from this file with uv; Dependabot (uv ecosystem) updates both.
+PyYAML==6.0.3
+pytest==9.2.0
+setuptools==84.2.1

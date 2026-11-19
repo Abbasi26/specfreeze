@@ -1,10 +1,33 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/logo-light.svg">
+    <img src="docs/assets/logo-light.svg" alt="specfreeze" height="64">
+  </picture>
+</p>
+
+<p align="center">Freezes design decisions as a contract and rejects code that drifts.</p>
+
+<p align="center">
+  <img src="docs/assets/readme-hero.png" width="800" alt="Terminal output of specfreeze demo: 13 answers, a frozen contract, one repair rejected for changing the signature, one accepted, tests going from 8 passed / 2 failed to 10 passed.">
+</p>
+
 # specfreeze
 
 [![CI](https://github.com/Abbasi26/specfreeze/actions/workflows/ci.yml/badge.svg)](https://github.com/Abbasi26/specfreeze/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Decide the design in closed questions, freeze the interface, then let a code model implement it.
 
 Large language models write plausible code for vague requirements, and the plausible choice is often one you did not make. specfreeze is a local Python command-line tool that asks those decisions up front, freezes them as a contract, and refuses implementations and repairs that drift from it.
+
+## Demo video
+
+[![Demo video for specfreeze](docs/media/brag.jpg)](docs/media/brag.mp4)
+
+specfreeze turns closed design decisions into a frozen Python contract, rejects repairs that move the interface, and provides a static `verify` gate for later edits. (Click the image to play the video.)
+
+Music: Sascha Ende ([ende.app](https://ende.app)), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 ## The problem
 
@@ -50,7 +73,7 @@ Add a `sep` parameter to `format_shares`, change `SEPARATOR`, and add a public `
   [extra_public] line 22: public function `helper` is not in the contract; make it private (`_helper`) or add it to the spec
 ```
 
-`verify` parses the file with `ast`. It never imports or runs it, needs no API key, and opens no network connection. It checks signatures, missing, changed, or reassigned frozen constants, calls that cannot match a frozen signature, async drift, and public names that are not in the contract. Problems include their source line in text and JSON when a concrete location exists. A contract whose digest no longer matches is refused (exit 2). `--json` prints a machine-readable result. Exit codes: 0 clean, 1 drift, 2 usage or contract error.
+`verify` parses the file with `ast`. It never imports or runs it, needs no API key, and opens no network connection. It checks signatures, missing, changed, or reassigned frozen constants, calls that cannot match a frozen signature, async drift, and public names that are not in the contract. Problems include their source line in text and JSON when a concrete location exists. A contract whose digest no longer matches is refused (exit 2). `--json` prints a machine-readable result. To check several modules in one call, repeat `--pair MODULE=CONTRACT` (for example `--pair src/a.py=runs/a --pair src/b.py=runs/b/contract.json`); the exit code is 1 if any module drifts, and `--json` then prints `{"ok": ..., "results": [...]}` with one single-module entry per pair. Exit codes: 0 clean, 1 drift, 2 usage or contract error.
 
 To run it in CI, commit `contract.json` next to the module and copy [examples/github-actions/contract-gate.yml](examples/github-actions/contract-gate.yml).
 

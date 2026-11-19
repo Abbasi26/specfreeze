@@ -1,0 +1,86 @@
+version: 1
+name: parser-example
+description: Closed questions for small parser functions, covering return values, invalid input handling, whitespace, case, and accepted formats.
+max_per_function: 100
+questions:
+  - id: invalid_input
+    category: errors
+    type: choice
+    applies_to: ["parse_integer", "parse_boolean"]
+    ask: "What should `{function}` do when the input is invalid for the accepted format?"
+    options:
+      raise_value_error: "Raise ValueError."
+      return_none: "Return None."
+    conservative: "raise_value_error"
+    contract_note:
+      raise_value_error: "`{function}` raises ValueError for invalid input."
+      return_none: "`{function}` returns None for invalid input."
+
+  - id: empty_input
+    category: edge
+    type: choice
+    applies_to: ["parse_integer", "parse_boolean"]
+    ask: "How should `{function}` treat an empty string?"
+    options:
+      invalid: "Treat it as invalid input."
+      default_none: "Treat it as missing and return None."
+    conservative: "invalid"
+    contract_note:
+      invalid: "`{function}` treats an empty string as invalid input."
+      default_none: "`{function}` treats an empty string as missing and returns None."
+
+  - id: strip_whitespace
+    category: behaviour
+    type: yes_no
+    applies_to: ["parse_integer", "parse_boolean"]
+    ask: "Should `{function}` ignore leading and trailing whitespace in the input?"
+    conservative: "yes"
+    contract_note:
+      yes: "`{function}` strips leading and trailing whitespace before parsing."
+      no: "`{function}` does not strip leading or trailing whitespace before parsing."
+
+  - id: integer_sign
+    category: behaviour
+    type: yes_no
+    applies_to: ["parse_integer"]
+    ask: "Should `{function}` accept an optional leading plus or minus sign for integers?"
+    conservative: "yes"
+    contract_note:
+      yes: "`{function}` accepts an optional leading + or - sign."
+      no: "`{function}` accepts only unsigned integer digits."
+
+  - id: integer_formats
+    category: behaviour
+    type: choice
+    applies_to: ["parse_integer"]
+    ask: "Which integer text formats should `{function}` accept?"
+    options:
+      decimal_only: "Only base-10 digits."
+      base_prefixes: "Base-10 digits and 0b/0o/0x prefixed integers."
+    conservative: "decimal_only"
+    contract_note:
+      decimal_only: "`{function}` accepts only base-10 integer text."
+      base_prefixes: "`{function}` accepts base-10 text and 0b, 0o, and 0x prefixed integers."
+
+  - id: boolean_case
+    category: behaviour
+    type: yes_no
+    applies_to: ["parse_boolean"]
+    ask: "Should `{function}` accept boolean words regardless of letter case?"
+    conservative: "yes"
+    contract_note:
+      yes: "`{function}` matches boolean words case-insensitively."
+      no: "`{function}` matches boolean words only in the documented letter case."
+
+  - id: boolean_formats
+    category: behaviour
+    type: choice
+    applies_to: ["parse_boolean"]
+    ask: "Which textual boolean values should `{function}` accept?"
+    options:
+      true_false: "Only true and false."
+      true_false_yes_no: "true/false and yes/no."
+    conservative: "true_false"
+    contract_note:
+      true_false: "`{function}` accepts only the words true and false."
+      true_false_yes_no: "`{function}` accepts true, false, yes, and no."
