@@ -77,17 +77,27 @@ def main(argv: list[str] | None = None) -> int:
         parents=[shared],
         help="check a Python module against a frozen contract (static, offline, never imports it)",
     )
-    verify.add_argument("module", type=Path, help="Python file to check")
+    verify.add_argument("module", type=Path, nargs="?", help="Python file to check (or use --pair)")
+    verify.add_argument("--contract", type=Path, help="contract.json or a run directory that contains it")
     verify.add_argument(
-        "--contract", required=True, type=Path, help="contract.json or a run directory that contains it"
+        "--pair",
+        action="append",
+        default=[],
+        metavar="MODULE=CONTRACT",
+        help="check several modules in one call; repeat for each module (instead of MODULE --contract)",
     )
     verify.add_argument("--json", action="store_true", help="print a JSON result")
     verify.set_defaults(func=_cmd_verify)
+
+    show = sub.add_parser("show", parents=[shared], help="show a read-only summary of an existing run")
+    show.add_argument("run_dir", type=Path, help="existing specfreeze run directory")
+    show.set_defaults(func=_cmd_show)
 
     catalog = sub.add_parser("catalog", parents=[shared], help="check or print question catalogs")
     catalog_sub = catalog.add_subparsers(dest="catalog_command", required=True)
     catalog_check = catalog_sub.add_parser("check", help="validate one or more catalog files")
     catalog_check.add_argument("paths", nargs="+", type=Path)
+    catalog_check.add_argument("--json", action="store_true", help="print a machine-readable summary")
     catalog_check.set_defaults(func=_cmd_catalog_check)
     catalog_print = catalog_sub.add_parser("print", help="print the shipped general catalog as a starting point")
     catalog_print.set_defaults(func=_cmd_catalog_print)
@@ -206,8 +216,25 @@ def _cmd_run(args) -> int:
 
 
 def _cmd_verify(args) -> int:
-    from specfreeze.verify import render_json, render_text, verify_file
+    from specfreeze.errors import ContractError
+    from specfreeze.verify import parse_pair, render_json, render_json_many, render_text, verify_file
 
+    if args.pair:
+        if args.module is not None or args.contract is not None:
+            raise ContractError("use either MODULE --contract CONTRACT or --pair, not both")
+        pairs = [parse_pair(value) for value in args.pair]
+        results = [(str(module), verify_file(module, contract)) for module, contract in pairs]
+        if args.json:
+            sys.stdout.write(render_json_many([result for _, result in results]))
+        else:
+            blocks = [render_text(result, label) for label, result in results]
+            clean = sum(1 for _, result in results if result.ok)
+            blocks.append(f"{clean} of {len(results)} module(s) match their frozen contract.")
+            print("\n\n".join(blocks))
+        return 0 if all(result.ok for _, result in results) else 1
+
+    if args.module is None or args.contract is None:
+        raise ContractError("verify needs MODULE --contract CONTRACT, or one or more --pair MODULE=CONTRACT")
     result = verify_file(args.module, args.contract)
     if args.json:
         sys.stdout.write(render_json(result))
@@ -216,12 +243,25 @@ def _cmd_verify(args) -> int:
     return 0 if result.ok else 1
 
 
+def _cmd_show(args) -> int:
+    from specfreeze.show import render_run
+
+    sys.stdout.write(render_run(args.run_dir))
+    return 0
+
+
 def _cmd_catalog_check(args) -> int:
+    import json
+
     from specfreeze.catalogcheck import check_catalogs
 
-    lines, failed = check_catalogs(args.paths)
-    for line in lines:
-        print(line)
+    lines, failed, summaries = check_catalogs(args.paths)
+    if args.json:
+        sys.stdout.write(json.dumps({"files": summaries}, indent=2))
+        sys.stdout.write("\n")
+    else:
+        for line in lines:
+            print(line)
     return 1 if failed else 0
 
 
