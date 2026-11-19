@@ -189,7 +189,3 @@ def test_yes_no_followup_rejects_options_or_levels(nested, qtype, fields):
         if nested:
             child = child.followups[0]
         assert child.type == "yes_no"
-
-
-# Skipped unrelated parser hardening and rename work; no files changed or tests run.
-# Risk: previously accepted yes/no follow-ups with non-empty options or levels will fail validation.

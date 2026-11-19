@@ -3,6 +3,10 @@
 ## Unreleased
 
 - `specfreeze verify --format markdown`: heading with result (passed / failed) and a Markdown table of problems for pull-request comments and job summaries. Default remains text output; exit codes unchanged.
+- CI: the setuptools build backend is in the hash-pinned `requirements-ci.txt`, and the project is installed with `--no-build-isolation`, so the build no longer downloads an unhashed setuptools.
+- Dependabot: weekly Python updates (uv ecosystem) for `pyproject.toml`, `requirements-ci.in` and the hash-pinned `requirements-ci.txt`. `requirements-ci.txt` is now compiled from `requirements-ci.in` so Dependabot can recompile it with hashes.
+- Dependencies: runtime, dev and build requirements in `pyproject.toml` are pinned to exact versions (`==`). CI installs from the hash-pinned `requirements-ci.txt` (`pip install --require-hashes`), then the project itself with `--no-deps`. Prompted by the malicious `agent-framework` 1.26.1/1.26.2 releases on PyPI ([MAL-2026-20101](https://osv.dev/vulnerability/MAL-2026-20101)); none of these projects depend on it.
+- `specfreeze verify --pair MODULE=CONTRACT` (repeatable): check several modules against their contracts in one call. Exit 1 if any module drifts; `--json` prints `ok` plus one single-module result per pair. The single-module form is unchanged.
 
 ## 0.2.0 - 2026-10-28
 
