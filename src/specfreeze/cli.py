@@ -89,6 +89,10 @@ def main(argv: list[str] | None = None) -> int:
     verify.add_argument("--json", action="store_true", help="print a JSON result")
     verify.set_defaults(func=_cmd_verify)
 
+    show = sub.add_parser("show", parents=[shared], help="show a read-only summary of an existing run")
+    show.add_argument("run_dir", type=Path, help="existing specfreeze run directory")
+    show.set_defaults(func=_cmd_show)
+
     catalog = sub.add_parser("catalog", parents=[shared], help="check or print question catalogs")
     catalog_sub = catalog.add_subparsers(dest="catalog_command", required=True)
     catalog_check = catalog_sub.add_parser("check", help="validate one or more catalog files")
@@ -237,6 +241,13 @@ def _cmd_verify(args) -> int:
     else:
         print(render_text(result, str(args.module)))
     return 0 if result.ok else 1
+
+
+def _cmd_show(args) -> int:
+    from specfreeze.show import render_run
+
+    sys.stdout.write(render_run(args.run_dir))
+    return 0
 
 
 def _cmd_catalog_check(args) -> int:
