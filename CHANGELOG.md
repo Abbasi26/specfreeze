@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- `specfreeze verify` reports source line numbers for located problems in text and JSON output.
 - `specfreeze catalog check`: warn when two top-level questions share the same `ask` text, a copy-paste mistake that is easy to miss by eye.
 - CI: the setuptools build backend is in the hash-pinned `requirements-ci.txt`, and the project is installed with `--no-build-isolation`, so the build no longer downloads an unhashed setuptools.
 - Dependabot: weekly Python updates (uv ecosystem) for `pyproject.toml`, `requirements-ci.in` and the hash-pinned `requirements-ci.txt`. `requirements-ci.txt` is now compiled from `requirements-ci.in` so Dependabot can recompile it with hashes.
