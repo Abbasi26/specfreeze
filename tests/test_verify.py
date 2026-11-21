@@ -5,7 +5,7 @@ import pytest
 from specfreeze.cli import main
 from specfreeze.contract import dump_contract
 from specfreeze.demo import run_demo
-from specfreeze.verify import render_markdown, verify_file, verify_source
+from specfreeze.verify import render_json, render_markdown, render_text, verify_file, verify_source
 
 
 @pytest.fixture(scope="module")
@@ -129,6 +129,43 @@ def test_cli_markdown_format(demo_run, tmp_path, capsys):
     out = capsys.readouterr().out
     assert "# specfreeze verify: failed" in out
     assert "| Kind | Message |" in out
+
+
+def test_problems_include_source_lines():
+    contract = {
+        "module": "sample",
+        "digest": "",
+        "frozen": True,
+        "header": "LIMIT = 3\n",
+        "constants": [{"name": "LIMIT", "code": "LIMIT = 3"}],
+        "functions": [
+            {"name": "target", "signature": "def target(value: int) -> int:"}
+        ],
+    }
+    source = (
+        "LIMIT = 4\n\n"
+        "def target(value: str) -> int:\n"
+        "    return target()\n\n"
+        "class Public:\n"
+        "    pass\n"
+    )
+
+    result = verify_source(source, contract)
+
+    assert {(problem.kind, problem.line) for problem in result.problems} == {
+        ("signature", 3),
+        ("constant", 1),
+        ("call", 4),
+        ("extra_public", 6),
+    }
+    assert "[call] line 4:" in render_text(result, "sample.py")
+    assert json.loads(render_json(result))["problems"][0]["line"] == 3
+
+
+def test_verify_markdown_for_several_pairs(demo_run, capsys):
+    pair = f"{demo_run / 'portion.py'}={demo_run}"
+    assert main(["verify", "--pair", pair, "--pair", pair, "--format", "markdown"]) == 0
+    assert capsys.readouterr().out.count("# specfreeze verify: passed") == 2
 
 
 def test_verify_several_pairs(demo_run, tmp_path, capsys):

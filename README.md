@@ -68,9 +68,9 @@ Add a `sep` parameter to `format_shares`, change `SEPARATOR`, and add a public `
 
 ```text
 3 problem(s):
-  [signature] signature deviates from the frozen contract: expected `def format_shares(shares: list[int]) -> str:`, got `def format_shares(shares: list[int], sep: str=',') -> str:`
-  [constant] frozen constant `SEPARATOR` has a different value than the contract
-  [extra_public] public function `helper` is not in the contract; make it private (`_helper`) or add it to the spec
+  [signature] line 16: signature deviates from the frozen contract: expected `def format_shares(shares: list[int]) -> str:`, got `def format_shares(shares: list[int], sep: str=',') -> str:`
+  [constant] line 5: frozen constant `SEPARATOR` has a different value than the contract
+  [extra_public] line 22: public function `helper` is not in the contract; make it private (`_helper`) or add it to the spec
 ```
 
 With `--format markdown`:
@@ -93,7 +93,7 @@ With `--format markdown`:
 | extra_public | public function `helper` is not in the contract; make it private (`_helper`) or add it to the spec |
 ```
 
-`verify` parses the file with `ast`. It never imports or runs it, needs no API key, and opens no network connection. It checks signatures, missing, changed, or reassigned frozen constants, calls that cannot match a frozen signature, async drift, and public names that are not in the contract. A contract whose digest no longer matches is refused (exit 2). `--format json` (or `--json`) prints a machine-readable result. `--format markdown` prints a heading with the result (passed / failed) and a Markdown table of the problems, suitable for pull-request comments and job summaries. To check several modules in one call, repeat `--pair MODULE=CONTRACT` (for example `--pair src/a.py=runs/a --pair src/b.py=runs/b/contract.json`); the exit code is 1 if any module drifts, and `--json` then prints `{"ok": ..., "results": [...]}` with one single-module entry per pair. Exit codes: 0 clean, 1 drift, 2 usage or contract error.
+`verify` parses the file with `ast`. It never imports or runs it, needs no API key, and opens no network connection. It checks signatures, missing, changed, or reassigned frozen constants, calls that cannot match a frozen signature, async drift, and public names that are not in the contract. Problems include their source line when a concrete location exists. A contract whose digest no longer matches is refused (exit 2). `--format json` (or `--json`) prints a machine-readable result. `--format markdown` prints a heading with the result (passed / failed) and a Markdown table of the problems, suitable for pull-request comments and job summaries. To check several modules in one call, repeat `--pair MODULE=CONTRACT` (for example `--pair src/a.py=runs/a --pair src/b.py=runs/b/contract.json`); the exit code is 1 if any module drifts, and `--json` then prints `{"ok": ..., "results": [...]}` with one single-module entry per pair. Exit codes: 0 clean, 1 drift, 2 usage or contract error.
 
 To run it in CI, commit `contract.json` next to the module and copy [examples/github-actions/contract-gate.yml](examples/github-actions/contract-gate.yml).
 
