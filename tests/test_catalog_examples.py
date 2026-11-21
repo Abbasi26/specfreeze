@@ -22,6 +22,6 @@ def test_parser_example_catalog_is_valid():
     assert sum(info["types"].values()) == info["questions"]
     assert set(info["types"]) <= {"yes_no", "choice", "score"}
 
-    lines, failed = check_catalogs([EXAMPLE])
+    lines, failed, _summaries = check_catalogs([EXAMPLE])
     assert failed == 0
     assert any("ok   " in line for line in lines)
