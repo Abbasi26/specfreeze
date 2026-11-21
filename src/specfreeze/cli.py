@@ -239,6 +239,8 @@ def _cmd_verify(args) -> int:
         results = [(str(module), verify_file(module, contract)) for module, contract in pairs]
         if args.json or args.format == "json":
             sys.stdout.write(render_json_many([result for _, result in results]))
+        elif args.format == "markdown":
+            sys.stdout.write("\n".join(render_markdown(result, label) for label, result in results))
         else:
             blocks = [render_text(result, label) for label, result in results]
             clean = sum(1 for _, result in results if result.ok)
