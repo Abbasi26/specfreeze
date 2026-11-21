@@ -150,6 +150,31 @@ def render_json(result: VerifyResult) -> str:
     return json.dumps(result.as_dict(), indent=2, ensure_ascii=False) + "\n"
 
 
+def render_markdown(result: VerifyResult, module_path: str) -> str:
+    status = "passed" if result.ok else "failed"
+    lines = [f"# specfreeze verify: {status}", ""]
+    lines.append(f"- **Module**: `{module_path}`")
+    lines.append(f"- **Contract**: `{result.module}`")
+    if result.digest:
+        lines.append(f"- **Digest**: `{result.digest[:12]}`")
+    lines.append(f"- **Functions**: {result.functions}")
+    lines.append(f"- **Constants**: {result.constants}")
+    lines.append("")
+    if result.ok:
+        lines.append("No problems found.")
+    else:
+        lines.append(f"{len(result.problems)} problem(s):")
+        lines.append("")
+        lines.append("| Kind | Message |")
+        lines.append("|-----|---------|")
+        for problem in result.problems:
+            kind = problem.kind
+            message = problem.message.replace("|", "\\|")
+            location = f"line {problem.line}: " if problem.line is not None else ""
+            lines.append(f"| {kind} | {location}{message} |")
+    return "\n".join(lines) + "\n"
+
+
 def parse_pair(value: str) -> tuple[Path, Path]:
     """Split ``module.py=contract`` at the first ``=``. Both sides must be non-empty."""
     module, sep, contract = value.partition("=")

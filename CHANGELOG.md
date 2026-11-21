@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- `specfreeze verify --format markdown`: heading with result (passed / failed) and a Markdown table of problems for pull-request comments and job summaries. Default remains text output; exit codes unchanged.
 - `specfreeze verify` reports source line numbers for located problems in text and JSON output.
 - `specfreeze catalog check`: warn when two top-level questions share the same `ask` text, a copy-paste mistake that is easy to miss by eye.
 - CI: the setuptools build backend is in the hash-pinned `requirements-ci.txt`, and the project is installed with `--no-build-isolation`, so the build no longer downloads an unhashed setuptools.

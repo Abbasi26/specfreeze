@@ -86,7 +86,13 @@ def main(argv: list[str] | None = None) -> int:
         metavar="MODULE=CONTRACT",
         help="check several modules in one call; repeat for each module (instead of MODULE --contract)",
     )
-    verify.add_argument("--json", action="store_true", help="print a JSON result")
+    verify.add_argument(
+        "--format",
+        choices=["text", "json", "markdown"],
+        default="text",
+        help="output format (default: text)",
+    )
+    verify.add_argument("--json", action="store_true", help="same as --format json")
     verify.set_defaults(func=_cmd_verify)
 
     show = sub.add_parser("show", parents=[shared], help="show a read-only summary of an existing run")
@@ -217,15 +223,24 @@ def _cmd_run(args) -> int:
 
 def _cmd_verify(args) -> int:
     from specfreeze.errors import ContractError
-    from specfreeze.verify import parse_pair, render_json, render_json_many, render_text, verify_file
+    from specfreeze.verify import (
+        parse_pair,
+        render_json,
+        render_json_many,
+        render_markdown,
+        render_text,
+        verify_file,
+    )
 
     if args.pair:
         if args.module is not None or args.contract is not None:
             raise ContractError("use either MODULE --contract CONTRACT or --pair, not both")
         pairs = [parse_pair(value) for value in args.pair]
         results = [(str(module), verify_file(module, contract)) for module, contract in pairs]
-        if args.json:
+        if args.json or args.format == "json":
             sys.stdout.write(render_json_many([result for _, result in results]))
+        elif args.format == "markdown":
+            sys.stdout.write("\n".join(render_markdown(result, label) for label, result in results))
         else:
             blocks = [render_text(result, label) for label, result in results]
             clean = sum(1 for _, result in results if result.ok)
@@ -236,8 +251,10 @@ def _cmd_verify(args) -> int:
     if args.module is None or args.contract is None:
         raise ContractError("verify needs MODULE --contract CONTRACT, or one or more --pair MODULE=CONTRACT")
     result = verify_file(args.module, args.contract)
-    if args.json:
+    if args.json or args.format == "json":
         sys.stdout.write(render_json(result))
+    elif args.format == "markdown":
+        sys.stdout.write(render_markdown(result, str(args.module)))
     else:
         print(render_text(result, str(args.module)))
     return 0 if result.ok else 1
